@@ -10,7 +10,8 @@
     "sourceMap": true,
     "outDir": "lib",
     "declaration": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "checkJs": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "*.js"]
 }

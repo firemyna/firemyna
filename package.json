@@ -45,6 +45,7 @@
   "dependencies": {
     "@esbuild-plugins/node-resolve": "^0.1.4",
     "acorn": "^8.5.0",
+    "chokidar": "^3.5.2",
     "commander": "^8.3.0",
     "esbuild": "^0.13.8",
     "estree-walker": "^2.0.2",

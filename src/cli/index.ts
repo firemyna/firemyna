@@ -7,6 +7,7 @@ import {
   FMPackageJSON,
   listDependencies,
   parseDependencies,
+  watchListFunction,
 } from "../functions";
 import { readFile, writeFile, mkdir, rm, copyFile } from "fs/promises";
 import { difference, flatten, remove, uniq } from "js-fns";
@@ -97,10 +98,18 @@ program
   });
 
 program
-  .command("start")
-  .description("start the Firebase project")
+  .command("watch")
+  .description("watch the Firebase project")
   .action(async () => {
-    console.log("start command called");
+    const options = program.opts();
+
+    const buildPath = resolve(process.cwd(), options.out);
+    const functionsBuildPath = resolve(buildPath, "functions");
+
+    watchListFunction({
+      functionsPath: options.functions,
+      functionsBuildPath,
+    });
   });
 
 program.parse();

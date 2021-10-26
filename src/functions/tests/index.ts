@@ -1,14 +1,22 @@
 import {
   buildFunctions,
+  FMOptions,
+  parseFunction,
   listDependencies,
   listFunctions,
   parseDependencies,
   stringifyFunctionsIndex,
+  includedFunction,
 } from "..";
-import { resolve } from "path";
+import { resolve, relative } from "path";
 
 describe("Firemyna", () => {
   const functionsBuildPath = resolve(__dirname, "fixtures/build");
+  const defaultFunctionsPath = resolve(__dirname, "fixtures/basic");
+  const options: FMOptions = {
+    functionsPath: defaultFunctionsPath,
+    functionsBuildPath,
+  };
 
   let cwd: string;
   beforeEach(() => {
@@ -54,19 +62,19 @@ describe("Firemyna", () => {
       const list = [
         {
           name: "a",
-          path: "./fixtures/mixed/a.js",
+          path: "fixtures/mixed/a.js",
         },
         {
           name: "b",
-          path: "./fixtures/mixed/b/index.js",
+          path: "fixtures/mixed/b/index.js",
         },
         {
           name: "c",
-          path: "./fixtures/mixed/c.jsx",
+          path: "fixtures/mixed/c.jsx",
         },
         {
           name: "d",
-          path: "./fixtures/mixed/d/index.jsx",
+          path: "fixtures/mixed/d/index.jsx",
         },
       ];
       const result = stringifyFunctionsIndex(list, {
@@ -112,19 +120,19 @@ export { default as b } from "./b.js";`
       expect(list).toEqual([
         {
           name: "a",
-          path: "./fixtures/basic/a.js",
+          path: "fixtures/basic/a.js",
         },
         {
           name: "b",
-          path: "./fixtures/basic/b.jsx",
+          path: "fixtures/basic/b.jsx",
         },
         {
           name: "c",
-          path: "./fixtures/basic/c.ts",
+          path: "fixtures/basic/c.ts",
         },
         {
           name: "d",
-          path: "./fixtures/basic/d.tsx",
+          path: "fixtures/basic/d.tsx",
         },
       ]);
     });
@@ -135,19 +143,19 @@ export { default as b } from "./b.js";`
       expect(list).toEqual([
         {
           name: "a",
-          path: "./fixtures/basic/a.js",
+          path: "fixtures/basic/a.js",
         },
         {
           name: "b",
-          path: "./fixtures/basic/b.jsx",
+          path: "fixtures/basic/b.jsx",
         },
         {
           name: "c",
-          path: "./fixtures/basic/c.ts",
+          path: "fixtures/basic/c.ts",
         },
         {
           name: "d",
-          path: "./fixtures/basic/d.tsx",
+          path: "fixtures/basic/d.tsx",
         },
       ]);
     });
@@ -158,35 +166,35 @@ export { default as b } from "./b.js";`
       expect(list).toEqual([
         {
           name: "a",
-          path: "./fixtures/mixed/a.js",
+          path: "fixtures/mixed/a.js",
         },
         {
           name: "b",
-          path: "./fixtures/mixed/b/index.js",
+          path: "fixtures/mixed/b/index.js",
         },
         {
           name: "c",
-          path: "./fixtures/mixed/c.jsx",
+          path: "fixtures/mixed/c.jsx",
         },
         {
           name: "d",
-          path: "./fixtures/mixed/d/index.jsx",
+          path: "fixtures/mixed/d/index.jsx",
         },
         {
           name: "e",
-          path: "./fixtures/mixed/e.ts",
+          path: "fixtures/mixed/e.ts",
         },
         {
           name: "f",
-          path: "./fixtures/mixed/f/index.ts",
+          path: "fixtures/mixed/f/index.ts",
         },
         {
           name: "g",
-          path: "./fixtures/mixed/g.tsx",
+          path: "fixtures/mixed/g.tsx",
         },
         {
           name: "h",
-          path: "./fixtures/mixed/h/index.tsx",
+          path: "fixtures/mixed/h/index.tsx",
         },
       ]);
     });
@@ -197,11 +205,11 @@ export { default as b } from "./b.js";`
       expect(list).toEqual([
         {
           name: "c",
-          path: "./fixtures/random/c.ts",
+          path: "fixtures/random/c.ts",
         },
         {
           name: "d",
-          path: "./fixtures/random/d.ts",
+          path: "fixtures/random/d.ts",
         },
       ]);
     });
@@ -216,19 +224,19 @@ export { default as b } from "./b.js";`
       expect(list).toEqual([
         {
           name: "b",
-          path: "./fixtures/mixed/b/index.js",
+          path: "fixtures/mixed/b/index.js",
         },
         {
           name: "c",
-          path: "./fixtures/mixed/c.jsx",
+          path: "fixtures/mixed/c.jsx",
         },
         {
           name: "d",
-          path: "./fixtures/mixed/d/index.jsx",
+          path: "fixtures/mixed/d/index.jsx",
         },
         {
           name: "g",
-          path: "./fixtures/mixed/g.tsx",
+          path: "fixtures/mixed/g.tsx",
         },
       ]);
     });
@@ -243,13 +251,143 @@ export { default as b } from "./b.js";`
       expect(list).toEqual([
         {
           name: "a",
-          path: "./fixtures/basic/a.js",
+          path: "fixtures/basic/a.js",
         },
         {
           name: "c",
-          path: "./fixtures/basic/c.ts",
+          path: "fixtures/basic/c.ts",
         },
       ]);
+    });
+  });
+
+  describe("parseFunction", () => {
+    it("returns the function definition if the path is a function", () => {
+      const path = resolve(defaultFunctionsPath, "hello.ts");
+      expect(parseFunction(options, path)).toEqual({
+        name: "hello",
+        path: relative(process.cwd(), path),
+      });
+    });
+
+    it("returns the function definition if the path is a function directory", () => {
+      const path = resolve(defaultFunctionsPath, "hello/index.js");
+      expect(parseFunction(options, path)).toEqual({
+        name: "hello",
+        path: relative(process.cwd(), path),
+      });
+    });
+
+    it("ignores nesting more than one", () => {
+      expect(
+        parseFunction(
+          options,
+          resolve(defaultFunctionsPath, "hello/world/index.js")
+        )
+      ).not.toBeDefined();
+
+      expect(
+        parseFunction(
+          options,
+          resolve(defaultFunctionsPath, "hello/index/world/index.js")
+        )
+      ).not.toBeDefined();
+    });
+
+    it("detects js/jsx/ts/tsx files", () => {
+      expect(
+        parseFunction(options, resolve(defaultFunctionsPath, "hello.js"))
+      ).toBeDefined();
+
+      expect(
+        parseFunction(options, resolve(defaultFunctionsPath, "hello/index.js"))
+      ).toBeDefined();
+
+      expect(
+        parseFunction(options, resolve(defaultFunctionsPath, "hello.jsx"))
+      ).toBeDefined();
+
+      expect(
+        parseFunction(options, resolve(defaultFunctionsPath, "hello/index.jsx"))
+      ).toBeDefined();
+
+      expect(
+        parseFunction(options, resolve(defaultFunctionsPath, "hello.ts"))
+      ).toBeDefined();
+
+      expect(
+        parseFunction(options, resolve(defaultFunctionsPath, "hello/index.ts"))
+      ).toBeDefined();
+
+      expect(
+        parseFunction(options, resolve(defaultFunctionsPath, "hello.tsx"))
+      ).toBeDefined();
+
+      expect(
+        parseFunction(options, resolve(defaultFunctionsPath, "hello/index.tsx"))
+      ).toBeDefined();
+
+      expect(
+        parseFunction(options, resolve(defaultFunctionsPath, "hello.rb"))
+      ).not.toBeDefined();
+
+      expect(
+        parseFunction(options, resolve(defaultFunctionsPath, "hello.t"))
+      ).not.toBeDefined();
+    });
+  });
+
+  describe("includedFunction", () => {
+    it("returns true unless the function is ignored", () => {
+      const testOptions = { ...options, functionsIgnorePaths: [/world/] };
+
+      const pathA = resolve(defaultFunctionsPath, "hello/index.js");
+      expect(
+        includedFunction(testOptions, {
+          name: "hello",
+          path: relative(process.cwd(), pathA),
+        })
+      ).toBe(true);
+
+      const pathB = resolve(defaultFunctionsPath, "world/index.js");
+      expect(
+        includedFunction(testOptions, {
+          name: "world",
+          path: relative(process.cwd(), pathB),
+        })
+      ).toBe(false);
+    });
+
+    it("returns false when only list is present and the function is not listed", () => {
+      const testOptions = {
+        ...options,
+        functionsIgnorePaths: [/world/],
+        onlyFunctions: ["cruel"],
+      };
+
+      const pathA = resolve(defaultFunctionsPath, "hello/index.js");
+      expect(
+        includedFunction(testOptions, {
+          name: "hello",
+          path: relative(process.cwd(), pathA),
+        })
+      ).toBe(false);
+
+      const pathB = resolve(defaultFunctionsPath, "cruel/index.js");
+      expect(
+        includedFunction(testOptions, {
+          name: "cruel",
+          path: relative(process.cwd(), pathB),
+        })
+      ).toBe(true);
+
+      const pathC = resolve(defaultFunctionsPath, "world/index.js");
+      expect(
+        includedFunction(testOptions, {
+          name: "world",
+          path: relative(process.cwd(), pathC),
+        })
+      ).toBe(false);
     });
   });
 

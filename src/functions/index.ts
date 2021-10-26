@@ -5,6 +5,7 @@ import { build, BuildResult } from "esbuild";
 import NodeResolve from "@esbuild-plugins/node-resolve";
 import { parse as parseSource } from "acorn";
 import { walk } from "estree-walker";
+import chokidar from "chokidar";
 
 /**
  * The Firemyna mode.
@@ -120,6 +121,8 @@ export async function buildFunctions(
   return build;
 }
 
+export function watchFunctions(options: FMOptions) {}
+
 /**
  * Generates functions index file string.
  *
@@ -156,27 +159,92 @@ const fnRegExp = /^.+\.[tj]sx?$/;
  * @param - the Firemyna options
  * @returns the list of functions
  */
-export async function listFunctions({
-  functionsPath,
-  functionsIgnorePaths,
-  onlyFunctions,
-}: FMOptions): Promise<FMFunction[]> {
+export async function listFunctions(options: FMOptions): Promise<FMFunction[]> {
+  const { functionsPath } = options;
   const dir = await readdir(functionsPath);
 
   return sweep(
     await Promise.all<FMFunction | undefined>(
-      dir.map(async (filePath) => {
-        const { name } = parsePath(filePath);
-        const fullPath = resolve(functionsPath, filePath);
+      dir.map(async (itemPath) => {
+        const fullPath = resolve(functionsPath, itemPath);
         const path = await findFunctionPath(fullPath);
+        if (!path) return;
 
-        const foundFn =
-          path && !functionsIgnorePaths?.find((regex) => regex.test(path));
-        const includedFn = !onlyFunctions || onlyFunctions.includes(name);
+        const { name } = parsePath(itemPath);
+        const fn = { name, path };
 
-        if (foundFn && includedFn) return { name, path };
+        if (includedFunction(options, fn)) return fn;
       })
     )
+  );
+}
+
+export async function watchListFunction(options: FMOptions) {
+  const watcher = chokidar.watch(options.functionsPath, {
+    persistent: true,
+    depth: 1,
+    ignoreInitial: true,
+  });
+
+  let functions = await listFunctions(options);
+
+  watcher.on("all", (event, path) => {
+    switch (event) {
+      case "add":
+      case "change":
+      case "unlink": {
+        const fn = parseFunction(options, path);
+        if (!fn || !includedFunction(options, fn)) return;
+
+        console.log("watch trigger", { event, fn });
+      }
+    }
+  });
+}
+
+/**
+ * Checks if the specified path is a function and if true, returns its
+ * definition object.
+ *
+ * @param options - the Firemyna options
+ * @param functionPath - the path to function to find function in
+ * @returns the function object
+ */
+export function parseFunction(
+  options: FMOptions,
+  functionPath: string
+): FMFunction | undefined {
+  const path = relative(process.cwd(), functionPath);
+  const relativePath = relative(options.functionsPath, functionPath);
+  const parsedPath = parsePath(relativePath);
+
+  if (parsedPath.dir) {
+    const nested = !!parsePath(parsedPath.dir).dir;
+    if (!nested && indexRegExp.test(parsedPath.base)) {
+      const name = parsedPath.dir;
+      return { name, path };
+    }
+  } else if (fnRegExp.test(parsedPath.base)) {
+    const name = parsedPath.name;
+    return { name, path };
+  }
+}
+
+/**
+ * Tests if the function is not ignored and if only list if present that it's
+ * in it
+ *
+ * @param options - the Firemyna options
+ * @param fn - the function to test
+ * @returns true if the function is included in build
+ */
+export function includedFunction(
+  { functionsIgnorePaths, onlyFunctions }: FMOptions,
+  fn: FMFunction
+): boolean {
+  return (
+    !functionsIgnorePaths?.find((regex) => regex.test(fn.path)) &&
+    (!onlyFunctions || onlyFunctions.includes(fn.name))
   );
 }
 
@@ -195,14 +263,10 @@ async function findFunctionPath(path: string): Promise<string | undefined> {
     const files = await readdir(path);
     const indexFile = files.find((file) => indexRegExp.test(file));
     if (!indexFile) return;
-    return relativeCwdPath(resolve(path, indexFile));
+    return relative(process.cwd(), resolve(path, indexFile));
   } else if (fnRegExp.test(path)) {
-    return relativeCwdPath(path);
+    return relative(process.cwd(), path);
   }
-}
-
-function relativeCwdPath(path: string) {
-  return "./" + relative(process.cwd(), path);
 }
 
 interface BuildFileProps {
