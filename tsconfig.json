@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2019",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "noUncheckedIndexedAccess": true,
+    "strict": true,
+    "sourceMap": true,
+    "outDir": "lib",
+    "declaration": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*"]
+}

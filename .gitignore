@@ -1,0 +1,5 @@
+node_modules
+/lib
+.npmrc
+/tmp
+src/tests/fixtures/project/build

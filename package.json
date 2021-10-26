@@ -1,0 +1,53 @@
+{
+  "name": "firemyna",
+  "version": "0.1.0",
+  "description": "Firebase application framework",
+  "main": "lib/index.js",
+  "bin": {
+    "fm": "lib/cli/index.js"
+  },
+  "files": [
+    "lib",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "jest",
+    "build": "rimraf lib && tsc -p tsconfig.lib.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/firemyna/firemyna.git"
+  },
+  "keywords": [
+    "Firebase",
+    "Firebase Functions",
+    "Functions Hosting"
+  ],
+  "author": "Sasha Koss <koss@nocorp.me>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/firemyna/firemyna/issues"
+  },
+  "homepage": "https://github.com/firemyna/firemyna#readme",
+  "devDependencies": {
+    "@types/estree": "0.0.50",
+    "@types/jest": "^27.0.2",
+    "firebase-admin": "^10.0.0",
+    "firebase-functions": "^3.15.7",
+    "jest": "^27.3.1",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^27.0.7",
+    "ts-node": "^10.4.0",
+    "tsm": "^2.1.2",
+    "typescript": "^4.4.4"
+  },
+  "dependencies": {
+    "@esbuild-plugins/node-resolve": "^0.1.4",
+    "acorn": "^8.5.0",
+    "commander": "^8.3.0",
+    "esbuild": "^0.13.8",
+    "estree-walker": "^2.0.2",
+    "js-fns": "^2.5.1"
+  }
+}

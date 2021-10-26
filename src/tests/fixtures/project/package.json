@@ -1,0 +1,15 @@
+{
+  "name": "firemyna-test",
+  "version": "0.1.0",
+  "description": "Firemyna test project",
+  "main": "index.js",
+  "author": "Sasha Koss <koss@nocorp.me>",
+  "license": "MIT",
+  "dependencies": {
+    "firebase-admin": "^10.0.0",
+    "firebase-functions": "^3.15.7"
+  },
+  "devDependencies": {
+    "firemyna": "file:../../../.."
+  }
+}
