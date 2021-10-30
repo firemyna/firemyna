@@ -3,16 +3,21 @@
 import { program } from "commander";
 // import libraryPackageJSON from "../../package.json";
 import {
+  buildFile,
   buildFunctions,
+  FMFunction,
+  FMOptions,
   FMPackageJSON,
   listDependencies,
   parseDependencies,
+  stringifyFunctionsIndex,
   watchListFunction,
 } from "../functions";
 import { readFile, writeFile, mkdir, rm, copyFile } from "fs/promises";
 import { difference, flatten, remove, uniq } from "js-fns";
 import { resolve, parse as parsePath, relative } from "path";
 import cp, { ExecOptions } from "child_process";
+import { BuildIncremental, BuildResult } from "esbuild";
 
 // program.version(libraryPackageJSON.version);
 
@@ -24,53 +29,22 @@ program
   .command("build")
   .description("build the Firebase project")
   .action(async () => {
-    const options = program.opts();
+    const cliOptions = program.opts();
 
-    const buildPath = resolve(process.cwd(), options.out);
+    const buildPath = resolve(process.cwd(), cliOptions.out);
     const functionsBuildPath = resolve(buildPath, "functions");
 
-    const functions = await buildFunctions({
-      functionsPath: options.functions,
+    const options: FMOptions = {
+      functionsPath: cliOptions.functions,
       functionsBuildPath,
-    });
+    };
 
-    await rm(buildPath, { recursive: true, force: true });
-    await mkdir(functionsBuildPath, { recursive: true });
-
-    await Promise.all(
-      Object.values(functions).map((f) =>
-        Promise.all(
-          f.outputFiles?.map((file) => writeFile(file.path, file.text)) || []
-        )
-      )
-    );
-
-    function copyToBuild(name: string) {
-      return copyFile(name, resolve(functionsBuildPath, name));
-    }
-
-    await Promise.all([
-      copyToBuild("package.json"),
-
-      copyToBuild("package-lock.json"),
-
-      copyToBuild(".firebaserc"),
-
-      writeFile(
-        resolve(functionsBuildPath, "firebase.json"),
-        JSON.stringify(
-          {
-            functions: {
-              source: ".",
-              // TODO: Derive from the options?
-              runtime: "nodejs14",
-            },
-          },
-          null,
-          2
-        )
-      ),
+    const [functions] = await Promise.all([
+      buildFunctions(options),
+      prepareFunctionsBuild(options),
     ]);
+
+    await Promise.all(Object.values(functions).map(writeBuild));
 
     // TODO: Set the main field in package.json
 
@@ -101,14 +75,69 @@ program
   .command("watch")
   .description("watch the Firebase project")
   .action(async () => {
-    const options = program.opts();
-
-    const buildPath = resolve(process.cwd(), options.out);
+    const cliOptions = program.opts();
+    const buildPath = resolve(process.cwd(), cliOptions.out);
     const functionsBuildPath = resolve(buildPath, "functions");
 
-    watchListFunction({
-      functionsPath: options.functions,
+    const options: FMOptions = {
+      functionsPath: cliOptions.functions,
       functionsBuildPath,
+    };
+
+    await prepareFunctionsBuild(options);
+
+    const builds: Record<string, BuildIncremental> = {};
+    let functions: FMFunction[] = [];
+
+    async function startBuilding(fn: FMFunction) {
+      const build = await incrementalBuild(options, fn);
+      builds[fn.name] = build;
+      await writeBuild(build);
+    }
+
+    async function buildIndex() {
+      const indexContents = stringifyFunctionsIndex(functions, options);
+      const build = await buildFile({
+        file: "index.js",
+        buildPath: options.functionsBuildPath,
+        input: {
+          type: "contents",
+          contents: indexContents,
+        },
+        resolvePath: options.functionsPath,
+        options,
+      });
+      return writeBuild(build);
+    }
+
+    watchListFunction(options, async (event) => {
+      switch (event.type) {
+        case "initial": {
+          functions = event.functions;
+          return Promise.all([
+            Promise.all(event.functions.map(startBuilding)),
+            buildIndex(),
+          ]);
+        }
+
+        case "add": {
+          functions.push(event.function);
+          await startBuilding(event.function);
+          return buildIndex();
+        }
+
+        case "change": {
+          const build = await builds[event.function.name]?.rebuild();
+          return writeBuild(build);
+        }
+
+        case "unlink": {
+          functions = functions.filter((fn) => fn.name !== event.function.name);
+          builds[event.function.name]?.rebuild.dispose();
+          delete builds[event.function.name];
+          return buildIndex();
+        }
+      }
     });
   });
 
@@ -120,5 +149,56 @@ function exec(cmd: string, args: ExecOptions) {
       if (error) reject(error);
       else resolve(stdout || stderr);
     });
+  });
+}
+
+async function prepareFunctionsBuild(options: FMOptions) {
+  await rm(options.functionsBuildPath, { recursive: true, force: true });
+  await mkdir(options.functionsBuildPath, { recursive: true });
+
+  function copyToBuild(name: string) {
+    return copyFile(name, resolve(options.functionsBuildPath, name));
+  }
+
+  return Promise.all([
+    copyToBuild("package.json"),
+
+    copyToBuild("package-lock.json"),
+
+    copyToBuild(".firebaserc"),
+
+    writeFile(
+      resolve(options.functionsBuildPath, "firebase.json"),
+      JSON.stringify(
+        {
+          functions: {
+            source: ".",
+            // TODO: Derive from the options?
+            runtime: "nodejs14",
+          },
+        },
+        null,
+        2
+      )
+    ),
+  ]);
+}
+
+function writeBuild(build: BuildIncremental | BuildResult | undefined) {
+  return Promise.all(
+    build?.outputFiles?.map((file) => writeFile(file.path, file.text)) || []
+  );
+}
+
+async function incrementalBuild(options: FMOptions, fn: FMFunction) {
+  const file = `${fn.name}.js`;
+  return buildFile({
+    file,
+    buildPath: options.functionsBuildPath,
+    input: { type: "entry", path: fn.path },
+    resolvePath: parsePath(fn.path).dir,
+    bundle: true,
+    options,
+    incremental: true,
   });
 }

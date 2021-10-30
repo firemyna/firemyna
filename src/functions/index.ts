@@ -1,7 +1,7 @@
 import { stat, readdir, readFile } from "fs/promises";
 import { sweep, uniq } from "js-fns";
 import { resolve, parse as parsePath, relative } from "path";
-import { build, BuildResult } from "esbuild";
+import { build, BuildIncremental, BuildResult, OutputFile } from "esbuild";
 import NodeResolve from "@esbuild-plugins/node-resolve";
 import { parse as parseSource } from "acorn";
 import { walk } from "estree-walker";
@@ -86,7 +86,10 @@ export async function buildFunctions(
         build[file] = await buildFile({
           file,
           buildPath: options.functionsBuildPath,
-          contents: await readFile(fn.path, "utf8"),
+          input: {
+            type: "contents",
+            contents: await readFile(fn.path, "utf8"),
+          },
           resolvePath: parsePath(fn.path).dir,
           bundle: true,
           options,
@@ -96,7 +99,10 @@ export async function buildFunctions(
         buildFile({
           file: "index.js",
           buildPath: options.functionsBuildPath,
-          contents: indexContents,
+          input: {
+            type: "contents",
+            contents: indexContents,
+          },
           resolvePath: options.functionsPath,
           options,
         }).then((result) => {
@@ -108,7 +114,10 @@ export async function buildFunctions(
             buildFile({
               file: "init.js",
               buildPath: options.functionsBuildPath,
-              contents,
+              input: {
+                type: "contents",
+                contents,
+              },
               resolvePath: parsePath(options.functionsInitPath!).dir,
               options,
             }).then((result) => {
@@ -179,14 +188,46 @@ export async function listFunctions(options: FMOptions): Promise<FMFunction[]> {
   );
 }
 
-export async function watchListFunction(options: FMOptions) {
+export type FMWatchCallback = (event: FMWatchEvent) => void;
+
+export type FMWatchEvent =
+  | FMWatchEventInitial
+  | FMWatchEventAdd
+  | FMWatchEventUnlink
+  | FMWatchEventChange;
+
+export interface FMWatchEventInitial {
+  type: "initial";
+  functions: FMFunction[];
+}
+
+export interface FMWatchEventAdd {
+  type: "add";
+  function: FMFunction;
+}
+
+export interface FMWatchEventUnlink {
+  type: "unlink";
+  function: FMFunction;
+}
+
+export interface FMWatchEventChange {
+  type: "change";
+  function: FMFunction;
+}
+
+export async function watchListFunction(
+  options: FMOptions,
+  callback: FMWatchCallback
+) {
+  const functions = await listFunctions(options);
+  callback({ type: "initial", functions });
+
   const watcher = chokidar.watch(options.functionsPath, {
     persistent: true,
     depth: 1,
     ignoreInitial: true,
   });
-
-  let functions = await listFunctions(options);
 
   watcher.on("all", (event, path) => {
     switch (event) {
@@ -196,7 +237,7 @@ export async function watchListFunction(options: FMOptions) {
         const fn = parseFunction(options, path);
         if (!fn || !includedFunction(options, fn)) return;
 
-        console.log("watch trigger", { event, fn });
+        callback({ type: event, function: fn });
       }
     }
   });
@@ -269,23 +310,43 @@ async function findFunctionPath(path: string): Promise<string | undefined> {
   }
 }
 
-interface BuildFileProps {
+export interface BuildFileProps<Incremental extends boolean | undefined> {
   file: string;
   buildPath: string;
-  contents: string;
+  input: BuildFileInput;
   resolvePath: string;
   bundle?: boolean;
   options: FMOptions;
+  incremental?: Incremental;
 }
 
-function buildFile({
+export type BuildFileInput = BuildFileInputEntry | BuildFileInputContents;
+
+export interface BuildFileInputEntry {
+  type: "entry";
+  path: string;
+}
+
+export interface BuildFileInputContents {
+  type: "contents";
+  contents: string;
+}
+
+export function buildFile<Incremental extends boolean | undefined>(
+  props: BuildFileProps<Incremental>
+): Incremental extends true
+  ? Promise<BuildIncremental & { outputFiles: OutputFile[] }>
+  : Promise<BuildResult & { outputFiles: OutputFile[] }>;
+
+export function buildFile<Incremental extends boolean | undefined>({
   file,
   buildPath,
-  contents,
+  input,
   resolvePath,
   bundle,
   options,
-}: BuildFileProps) {
+  incremental,
+}: BuildFileProps<Incremental>) {
   return build({
     bundle,
     platform: "node",
@@ -293,11 +354,15 @@ function buildFile({
     sourcemap: "external",
     format: "cjs",
     outfile: resolve(buildPath, file),
-    stdin: {
-      contents,
-      sourcefile: file,
-      resolveDir: resolvePath,
-    },
+    entryPoints: input.type === "entry" ? [input.path] : undefined,
+    stdin:
+      input.type === "contents"
+        ? {
+            contents: input.contents,
+            sourcefile: file,
+            resolveDir: resolvePath,
+          }
+        : undefined,
     plugins: [
       NodeResolve({
         extensions: [".ts", ".tsx", ".js", ".jsx"],
@@ -306,6 +371,7 @@ function buildFile({
       }),
     ],
     write: false,
+    incremental,
   });
 }
 
@@ -340,5 +406,3 @@ export function parseDependencies(source: string): string[] {
 
   return uniq(deps);
 }
-
-// export function filterUnusedDependecies() {}
