@@ -4,7 +4,7 @@
   "description": "Firebase application framework",
   "main": "lib/index.js",
   "bin": {
-    "fm": "lib/cli/index.js"
+    "firemyna": "lib/cli/index.js"
   },
   "files": [
     "lib",
