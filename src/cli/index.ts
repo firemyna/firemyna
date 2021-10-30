@@ -35,6 +35,7 @@ program
     const functionsBuildPath = resolve(buildPath, "functions");
 
     const options: FMOptions = {
+      mode: "build",
       functionsPath: cliOptions.functions,
       functionsBuildPath,
     };
@@ -74,14 +75,17 @@ program
 program
   .command("watch")
   .description("watch the Firebase project")
-  .action(async () => {
+  .option("--config [runtimeConfig]", "Specify the path to runtime config")
+  .action(async (commandOptions) => {
     const cliOptions = program.opts();
     const buildPath = resolve(process.cwd(), cliOptions.out);
     const functionsBuildPath = resolve(buildPath, "functions");
 
     const options: FMOptions = {
+      mode: "watch",
       functionsPath: cliOptions.functions,
       functionsBuildPath,
+      functionsRuntimeConfigPath: commandOptions.config,
     };
 
     await prepareFunctionsBuild(options);
@@ -156,11 +160,11 @@ async function prepareFunctionsBuild(options: FMOptions) {
   await rm(options.functionsBuildPath, { recursive: true, force: true });
   await mkdir(options.functionsBuildPath, { recursive: true });
 
-  function copyToBuild(name: string) {
-    return copyFile(name, resolve(options.functionsBuildPath, name));
+  function copyToBuild(name: string, out?: string) {
+    return copyFile(name, resolve(options.functionsBuildPath, out || name));
   }
 
-  return Promise.all([
+  return Promise.all<any>([
     copyToBuild("package.json"),
 
     copyToBuild("package-lock.json"),
@@ -181,6 +185,10 @@ async function prepareFunctionsBuild(options: FMOptions) {
         2
       )
     ),
+
+    options.mode === "watch" &&
+      options.functionsRuntimeConfigPath &&
+      copyToBuild(options.functionsRuntimeConfigPath, ".runtimeconfig.json"),
   ]);
 }
 

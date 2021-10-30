@@ -10,7 +10,7 @@ import chokidar from "chokidar";
 /**
  * The Firemyna mode.
  */
-export type FMMode = "development" | "production";
+export type FMMode = "build" | "watch";
 
 /**
  * The Firebase Functions runtime version.
@@ -29,7 +29,7 @@ export interface FMOptions {
   /**
    * The build mode.
    */
-  // mode: FMMode;
+  mode: FMMode;
   /**
    * The path (relative to cwd or absolute) to the functions root directory.
    */
@@ -54,6 +54,10 @@ export interface FMOptions {
    * The Functions runtime version.
    */
   functionsRuntime?: FMFunctionsRuntime;
+  /**
+   * The Functions runtime config path.
+   */
+  functionsRuntimeConfigPath?: string;
 }
 
 /**

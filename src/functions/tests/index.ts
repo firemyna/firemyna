@@ -14,6 +14,7 @@ describe("Firemyna", () => {
   const functionsBuildPath = resolve(__dirname, "fixtures/build");
   const defaultFunctionsPath = resolve(__dirname, "fixtures/basic");
   const options: FMOptions = {
+    mode: "build",
     functionsPath: defaultFunctionsPath,
     functionsBuildPath,
   };
@@ -32,6 +33,7 @@ describe("Firemyna", () => {
     it("builds function", async () => {
       const functionsPath = resolve(process.cwd(), "fixtures/basic");
       const result = await buildFunctions({
+        ...options,
         functionsPath,
         functionsBuildPath,
       });
@@ -78,6 +80,7 @@ describe("Firemyna", () => {
         },
       ];
       const result = stringifyFunctionsIndex(list, {
+        ...options,
         functionsPath,
         functionsBuildPath,
       });
@@ -101,6 +104,7 @@ export { default as d } from "./d.js";`
         },
       ];
       const result = stringifyFunctionsIndex(list, {
+        ...options,
         functionsPath,
         functionsBuildPath,
         functionsInitPath: resolve(process.cwd(), "fixtures/init.ts"),
@@ -116,7 +120,11 @@ export { default as b } from "./b.js";`
   describe("listFunctions", () => {
     it("lists functions in the given directory", async () => {
       const functionsPath = resolve(process.cwd(), "fixtures/basic");
-      const list = await listFunctions({ functionsPath, functionsBuildPath });
+      const list = await listFunctions({
+        ...options,
+        functionsPath,
+        functionsBuildPath,
+      });
       expect(list).toEqual([
         {
           name: "a",
@@ -139,7 +147,11 @@ export { default as b } from "./b.js";`
 
     it("allows to pass relative path", async () => {
       const functionsPath = "fixtures/basic";
-      const list = await listFunctions({ functionsPath, functionsBuildPath });
+      const list = await listFunctions({
+        ...options,
+        functionsPath,
+        functionsBuildPath,
+      });
       expect(list).toEqual([
         {
           name: "a",
@@ -162,7 +174,11 @@ export { default as b } from "./b.js";`
 
     it("lists functions in the nested directories", async () => {
       const functionsPath = resolve(process.cwd(), "fixtures/mixed");
-      const list = await listFunctions({ functionsPath, functionsBuildPath });
+      const list = await listFunctions({
+        ...options,
+        functionsPath,
+        functionsBuildPath,
+      });
       expect(list).toEqual([
         {
           name: "a",
@@ -201,7 +217,11 @@ export { default as b } from "./b.js";`
 
     it("ignores non-js/ts and non-index files", async () => {
       const functionsPath = resolve(process.cwd(), "fixtures/random");
-      const list = await listFunctions({ functionsPath, functionsBuildPath });
+      const list = await listFunctions({
+        ...options,
+        functionsPath,
+        functionsBuildPath,
+      });
       expect(list).toEqual([
         {
           name: "c",
@@ -217,6 +237,7 @@ export { default as b } from "./b.js";`
     it("allows to specify functions ignore regexps", async () => {
       const functionsPath = resolve(process.cwd(), "fixtures/mixed");
       const list = await listFunctions({
+        ...options,
         functionsPath,
         functionsIgnorePaths: [/index\.ts/, /(a|e)\.[jt]s/],
         functionsBuildPath,
@@ -244,6 +265,7 @@ export { default as b } from "./b.js";`
     it("allows to specify the functions to build", async () => {
       const functionsPath = resolve(process.cwd(), "fixtures/basic");
       const list = await listFunctions({
+        ...options,
         functionsPath,
         onlyFunctions: ["a", "c"],
         functionsBuildPath,
