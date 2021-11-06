@@ -3,15 +3,18 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "astro dev",
-    "start": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview"
+    "dev": "firemyna start",
+    "start": "firemyna start",
+    "build": "firemyna build",
+    "preview": "firemyna preview"
   },
   "devDependencies": {
-    "astro": "^0.20.12"
+    "astro": "^0.20.12",
+    "firebase-tools": "^9.22.0"
   },
   "dependencies": {
+    "firebase-admin": "^10.0.0",
+    "firebase-functions": "^3.16.0",
     "firemyna": "^0.2.0"
   }
 }

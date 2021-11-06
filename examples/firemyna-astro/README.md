@@ -1,42 +1,159 @@
-# Welcome to [Astro](https://astro.build)
+# Firemyna 💖 Astro
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/snowpackjs/astro/tree/latest/examples/starter)
+## Getting started
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+### Init Astro project
 
-## 🚀 Project Structure
+First, let's init Astro project following the [official instructions](https://docs.astro.build/getting-started/):
 
-Inside of your Astro project, you'll see the following folders and files:
-
-```
-/
-├── public/
-│   ├── robots.txt
-│   └── favicon.ico
-├── src/
-│   ├── components/
-│   │   └── Tour.astro
-│   └── pages/
-│       └── index.astro
-└── package.json
+```bash
+mkdir PROJECT_NAME
+cd PROJECT_NAME
+npm init astro
+npm install
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+### Setup Firebase configuration
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+You'll need to add `.firebaserc` with your Firebase project id:
 
-Any static assets, like images, can be placed in the `public/` directory.
+```json
+{
+  "projects": {
+    "default": "FIREBASE_PROJECT_ID"
+  }
+}
+```
 
-## 🧞 Commands
+> _It defines the Firebase project id to use when starting the emulator and deploying the app._
 
-All commands are run from the root of the project, from a terminal:
+### Adjust Astro configuration
 
-| Command         | Action                                      |
-| :-------------- | :------------------------------------------ |
-| `npm install`   | Installs dependencies                       |
-| `npm run dev`   | Starts local dev server at `localhost:3000` |
-| `npm run build` | Build your production site to `./dist/`     |
+Now, we need to adjust the Astro configuration and set `./dist/production/hosting` as the `dist` property:
 
-## 👀 Want to learn more?
+```diff
+--- a/astro.config.mjs
++++ b/astro.config.mjs
+@@ -1,7 +1,7 @@
+ export default {
+   // projectRoot: '.',     // Where to resolve all URLs relative to. Useful if you have a monorepo project.
+   // pages: './src/pages', // Path to Astro components, pages, and data
+-  // dist: './dist',       // When running `astro build`, path to final static output
++  dist: './dist/production/hosting',
+   // public: './public',   // A folder of static files Astro will copy to the root. Useful for favicons, images, and other files that don’t need processing.
+   buildOptions: {
+     // site: 'http://example.com',           // Your public domain, e.g.: https://my-site.dev/. Used to generate sitemaps and canonical URLs.
+```
 
-Feel free to check [our documentation](https://github.com/snowpackjs/astro) or jump into our [Discord server](https://astro.build/chat).
+> _This change separates the development and production environments and distinguishes Astro's static assets that we'll deploy to Firebase Hosting._
+
+### Adjust Snowpack configuration
+
+We need to initialize Snowpack, so it would generate the configuration file:
+
+```bash
+npx snowpack init
+```
+
+Then, adjust the config to exclude the functions directory:
+
+```diff
+--- a/snowpack.config.js
++++ b/snowpack.config.js
+@@ -18,4 +18,5 @@ module.exports = {
+   buildOptions: {
+     /* ... */
+   },
++  exclude: ["**/node_modules/**/*", "**/src/functions/**/*"],
+ };
+```
+
+> _It tells Snowpack to ignore the functions directory, so it would not trip over server-side code._
+
+### Install Firemyna & Firebase dependencies
+
+Install Firemyna package:
+
+```bash
+npm install firemyna firebase-functions firebase-admin --save
+npm install firebase-tools --save-dev
+```
+
+### Adjust the scripts
+
+Replace the Astro commands with Firemyna:
+
+```diff
+--- a/package.json
++++ b/package.json
+@@ -3,10 +3,10 @@
+   "version": "0.0.1",
+   "private": true,
+   "scripts": {
+-    "dev": "astro dev",
+-    "start": "astro dev",
+-    "build": "astro build",
+-    "preview": "astro preview"
++    "dev": "firemyna start --preset astro",
++    "start": "firemyna start --preset astro",
++    "build": "firemyna build --preset astro",
+   },
+   "devDependencies": {
+     "astro": "^0.20.12"
+```
+
+### Init Firemyna
+
+Now, initialize the Firemyna. It will only generate functions directory with a demo function:
+
+```bash
+npx firemyna init --preset astro
+```
+
+> _You can also create a directory `src/functions` and add files exposing Firebase functions as the default exports. The name of the file will be the name of the function._
+
+## Developing
+
+To start working on the project, run the `start` script:
+
+```bash
+npm start
+```
+
+It will start the Astro project on [localhost:3000](http://localhost:3000/) and Firebase Functions on `localhost:5000` with the demo function running at `http://localhost:5000/FIREBASE_PROJECT_ID/us-central1/hello`.
+
+See the logs for more details.
+
+## Building
+
+To build the project before deploying to production, run the `build` script:
+
+```bash
+npm run build
+```
+
+It will build the Astro project to `dist/production/hosting` and the functions to `dist/production`.
+
+## Previewing the build
+
+To preview the built project, cd to `dist/production` and run `firebase serve`
+
+```bash
+cd dist/production
+npx firebase serve
+```
+
+It will start both web and functions on [localhost:5000](http://localhost:5000/).
+
+## Deploying
+
+To deploy the project, cd to `dist/production` and run `firebase deploy`:
+
+```bash
+cd dist/production
+npx firebase deploy
+```
+
+## Further reading
+
+Refer to the [Firemyna README](https://github.com/kossnocorp/firemyna#readme) for more details.
