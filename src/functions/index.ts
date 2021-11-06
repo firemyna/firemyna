@@ -6,6 +6,7 @@ import NodeResolve from "@esbuild-plugins/node-resolve";
 import { parse as parseSource } from "acorn";
 import { walk } from "estree-walker";
 import chokidar from "chokidar";
+import { getFunctionBuildPath } from "../options";
 
 /**
  * The Firemyna mode.
@@ -37,7 +38,7 @@ export interface FMOptions {
   /**
    * The functions build path.
    */
-  functionsBuildPath: string;
+  buildPath: string;
   /**
    * The functions to build.
    */
@@ -89,7 +90,7 @@ export async function buildFunctions(
         const file = `${fn.name}.js`;
         build[file] = await buildFile({
           file,
-          buildPath: options.functionsBuildPath,
+          buildPath: getFunctionBuildPath(options.buildPath),
           input: {
             type: "contents",
             contents: await readFile(fn.path, "utf8"),
@@ -102,7 +103,7 @@ export async function buildFunctions(
       .concat([
         buildFile({
           file: "index.js",
-          buildPath: options.functionsBuildPath,
+          buildPath: getFunctionBuildPath(options.buildPath),
           input: {
             type: "contents",
             contents: indexContents,
@@ -117,7 +118,7 @@ export async function buildFunctions(
           readFile(options.functionsInitPath, "utf8").then((contents) =>
             buildFile({
               file: "init.js",
-              buildPath: options.functionsBuildPath,
+              buildPath: getFunctionBuildPath(options.buildPath),
               input: {
                 type: "contents",
                 contents,
@@ -380,7 +381,11 @@ export function buildFile<Incremental extends boolean | undefined>({
 }
 
 export interface FMPackageJSON {
-  runtime?: string;
+  main: string;
+  engines?: {
+    node?: string;
+    npm?: string;
+  };
   dependencies?: { [dependency: string]: string };
   devDependencies?: { [dependency: string]: string };
 }

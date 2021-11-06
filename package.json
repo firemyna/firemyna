@@ -1,6 +1,6 @@
 {
   "name": "firemyna",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Firebase application framework",
   "main": "lib/index.js",
   "bin": {
@@ -49,6 +49,7 @@
     "commander": "^8.3.0",
     "esbuild": "^0.13.8",
     "estree-walker": "^2.0.2",
-    "js-fns": "^2.5.1"
+    "js-fns": "^2.5.1",
+    "prettier": "^2.4.1"
   }
 }
