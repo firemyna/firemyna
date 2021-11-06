@@ -10,5 +10,8 @@
   },
   "devDependencies": {
     "astro": "^0.20.12"
+  },
+  "dependencies": {
+    "firemyna": "^0.2.0"
   }
 }
