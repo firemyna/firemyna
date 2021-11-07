@@ -1,70 +1,99 @@
-# Getting Started with Create React App
+# Firemyna 💖 Create React App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Getting started
 
-## Available Scripts
+### Init Create React App project
 
-In the project directory, you can run:
+First, let's init Create React App project following the [official instructions](https://reactjs.org/docs/create-a-new-react-app.html#create-react-app):
 
-### `npm start`
+```bash
+npx create-react-app PROJECT_NAME
+cd PROJECT_NAME
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### Setup Firebase configuration
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+You'll need to add `.firebaserc` with your Firebase project id:
 
-### `npm test`
+```json
+{
+  "projects": {
+    "default": "FIREBASE_PROJECT_ID"
+  }
+}
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+> _It defines the Firebase project id to use when starting the emulator and deploying the app._
 
-### `npm run build`
+### Install Firemyna & Firebase dependencies
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Install Firemyna package:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+npm install firemyna firebase-functions firebase-admin --save
+npm install firebase-tools --save-dev
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Adjust the scripts
 
-### `npm run eject`
+Replace the Create React App commands with Firemyna:
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+```diff
+--- a/package.json
++++ b/package.json
+@@ -12,8 +12,8 @@
+     "web-vitals": "^1.1.2"
+   },
+   "scripts": {
+-    "start": "react-scripts start",
+-    "build": "react-scripts build",
++    "start": "firemyna start --preset cra",
++    "build": "firemyna build --preset cra",
+     "test": "react-scripts test",
+     "eject": "react-scripts eject"
+   },
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Init Firemyna
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+Now, initialize the Firemyna. It will only generate functions directory with a demo function:
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+```bash
+npx firemyna init --preset cra
+```
 
-## Learn More
+> _You can also create a directory `src/functions` and add files exposing Firebase functions as the default exports. The name of the file will be the name of the function._
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Building
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+To build the project before deploying to production, run the `build` script:
 
-### Code Splitting
+```bash
+npm run build
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+It will build the Create React App project to `dist/production/hosting` and the functions to `dist/production`.
 
-### Analyzing the Bundle Size
+## Previewing the build
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+To preview the built project, cd to `dist/production` and run `firebase serve`
 
-### Making a Progressive Web App
+```bash
+cd dist/production
+npx firebase serve
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+It will start both web and functions on [localhost:5000](http://localhost:5000/).
 
-### Advanced Configuration
+## Deploying
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+To deploy the project, cd to `dist/production` and run `firebase deploy`:
 
-### Deployment
+```bash
+cd dist/production
+npx firebase deploy
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## Further reading
 
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Refer to the [Firemyna README](https://github.com/kossnocorp/firemyna#readme) for more details.

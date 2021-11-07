@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "firemyna watch --preset astro",
-    "start": "firemyna watch --preset astro",
+    "dev": "firemyna start --preset astro",
+    "start": "firemyna start --preset astro",
     "build": "firemyna build --preset astro",
     "preview": "firemyna preview --preset astro"
   },

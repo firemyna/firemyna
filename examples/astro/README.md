@@ -94,8 +94,8 @@ Replace the Astro commands with Firemyna:
 -    "start": "astro dev",
 -    "build": "astro build",
 -    "preview": "astro preview"
-+    "dev": "firemyna watch --preset astro",
-+    "start": "firemyna watch --preset astro",
++    "dev": "firemyna start --preset astro",
++    "start": "firemyna start --preset astro",
 +    "build": "firemyna build --preset astro",
    },
    "devDependencies": {

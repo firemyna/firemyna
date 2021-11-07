@@ -6,14 +6,17 @@
     "@testing-library/jest-dom": "^5.15.0",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
+    "firebase-admin": "^10.0.0",
+    "firebase-functions": "^3.16.0",
+    "firemyna": "^0.4.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
     "web-vitals": "^1.1.2"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "firemyna start --preset cra",
+    "build": "firemyna build --preset cra",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -34,5 +37,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "firebase-tools": "^9.22.0"
   }
 }
