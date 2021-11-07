@@ -36,6 +36,7 @@ program.addOption(
   new Option("--preset <preset>", "The preset to use").choices([
     "astro",
     "cra",
+    "vite",
     "next",
   ])
 );
@@ -108,6 +109,14 @@ program
             ...process.env,
             BUILD_PATH: getHostingBuildPath(options.buildPath),
           },
+        });
+        break;
+      }
+
+      case "vite": {
+        cp.spawn("npx", ["vite", "build"], {
+          shell: true,
+          stdio: "inherit",
         });
         break;
       }
@@ -202,6 +211,14 @@ program
         });
         break;
       }
+
+      case "vite": {
+        cp.spawn("npx", ["vite"], {
+          shell: true,
+          stdio: "inherit",
+        });
+        break;
+      }
     }
   });
 
@@ -225,7 +242,7 @@ program
 
 program.parse();
 
-export type FMPreset = "astro" | "cra" | "next";
+export type FMPreset = "astro" | "cra" | "vite" | "next";
 
 function presetOptions(mode: FMMode, preset: FMPreset): FMOptions {
   switch (preset) {
@@ -241,6 +258,13 @@ function presetOptions(mode: FMMode, preset: FMPreset): FMOptions {
         mode,
         functionsPath: "src/functions",
         buildPath: getModeBuildPath(mode, "build"),
+      };
+
+    case "vite":
+      return {
+        mode,
+        functionsPath: "src/functions",
+        buildPath: getModeBuildPath(mode, "dist"),
       };
 
     case "next":
