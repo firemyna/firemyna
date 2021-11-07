@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { program } from "commander";
+import { Option, program } from "commander";
 // import libraryPackageJSON from "../../package.json";
 import {
   buildFile,
@@ -19,7 +19,11 @@ import { difference, flatten, remove, uniq } from "js-fns";
 import { resolve, parse as parsePath, relative } from "path";
 import cp, { ExecOptions } from "child_process";
 import { BuildIncremental, BuildResult } from "esbuild";
-import { getFunctionBuildPath, getModeBuildPath } from "../options";
+import {
+  getFunctionBuildPath,
+  getHostingBuildPath,
+  getModeBuildPath,
+} from "../options";
 import { httpFunctionTemplate } from "../templates";
 
 // program.version(libraryPackageJSON.version);
@@ -28,7 +32,13 @@ program.option("--functions [functionsPath]", "Specify the functions path");
 
 program.option("--build [buildPath]", "Specify the build path");
 
-program.option("--preset <preset>", "astro", "next");
+program.addOption(
+  new Option("--preset <preset>", "The preset to use").choices([
+    "astro",
+    "cra",
+    "next",
+  ])
+);
 
 function getOptions(mode: FMMode, commandOptions: any) {
   const cliOptions = {
@@ -89,12 +99,24 @@ program
         });
         break;
       }
+
+      case "cra": {
+        cp.spawn("npx", ["react-scripts", "build"], {
+          shell: true,
+          stdio: "inherit",
+          env: {
+            ...process.env,
+            BUILD_PATH: getHostingBuildPath(options.buildPath),
+          },
+        });
+        break;
+      }
     }
   });
 
 program
-  .command("watch")
-  .description("watch the Firebase project")
+  .command("start")
+  .description("start the Firebase project")
   .option("--config [runtimeConfig]", "Specify the path to runtime config")
   .action(async (commandOptions) => {
     const { options, cliOptions } = getOptions("watch", commandOptions);
@@ -172,6 +194,14 @@ program
         });
         break;
       }
+
+      case "cra": {
+        cp.spawn("npx", ["react-scripts", "start"], {
+          shell: true,
+          stdio: "inherit",
+        });
+        break;
+      }
     }
   });
 
@@ -179,7 +209,7 @@ program
   .command("init")
   .description("init a Firebase project")
   .action(async (commandOptions) => {
-    const options = presetOptions("build", commandOptions.preset);
+    const { options } = getOptions("build", commandOptions);
 
     await mkdir(options.functionsPath, { recursive: true });
 
@@ -195,7 +225,7 @@ program
 
 program.parse();
 
-export type FMPreset = "astro" | "next";
+export type FMPreset = "astro" | "cra" | "next";
 
 function presetOptions(mode: FMMode, preset: FMPreset): FMOptions {
   switch (preset) {
@@ -204,6 +234,13 @@ function presetOptions(mode: FMMode, preset: FMPreset): FMOptions {
         mode,
         functionsPath: "src/functions",
         buildPath: getModeBuildPath(mode, "dist"),
+      };
+
+    case "cra":
+      return {
+        mode,
+        functionsPath: "src/functions",
+        buildPath: getModeBuildPath(mode, "build"),
       };
 
     case "next":
