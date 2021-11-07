@@ -132,7 +132,7 @@ To build the project before deploying to production, run the `build` script:
 npm run build
 ```
 
-It will build the Astro project to `dist/production/hosting` and the functions to `dist/production`.
+It will build the Astro project to `dist/production/hosting` and the functions to `dist/production/functions`.
 
 ## Previewing the build
 
