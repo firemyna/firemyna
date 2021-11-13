@@ -1,0 +1,1 @@
+export { FiremynaConfig } from "./config";

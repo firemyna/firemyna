@@ -1,16 +1,18 @@
-import { format } from "prettier";
+import { format as formatSource } from "prettier";
+import {
+  FiremynaConfig,
+  FiremynaFormat,
+  FiremynaPreset,
+  FiremynaTemplateModule,
+} from "../config";
 
-export type FMTemplateType = "ts" | "js";
-
-export type FMTemplateModule = "cjs" | "esm";
-
-export interface FMTemplateOptions {
-  type: FMTemplateType;
-  module: FMTemplateModule;
+export interface FiremynaTemplateOptions {
+  type: FiremynaFormat;
+  module: FiremynaTemplateModule;
 }
 
-export function httpFunctionTemplate(options: FMTemplateOptions): string {
-  return format(
+export function httpFunctionTemplate(options: FiremynaTemplateOptions): string {
+  return formatSource(
     `${importFunctions(options)}
 
 ${exportDefault(options)} functions.https.onRequest((_request, response) => {
@@ -21,7 +23,27 @@ ${exportDefault(options)} functions.https.onRequest((_request, response) => {
   );
 }
 
-function importFunctions(options: FMTemplateOptions): string {
+export function firemynaConfigTemplate(
+  format: FiremynaFormat,
+  preset: FiremynaPreset
+): string {
+  const prefix =
+    format === "ts"
+      ? `import type { FiremynaConfig } from "firemyna";
+  
+export const config : FiremynaConfig =`
+      : `/** @type {import("firemyna").FiremynaConfig } */
+export const config =`;
+
+  return formatSource(
+    `${prefix} {
+  preset: "${preset}",
+};`,
+    { parser: "babel" }
+  );
+}
+
+function importFunctions(options: FiremynaTemplateOptions): string {
   switch (options.module) {
     case "esm":
       switch (options.type) {
@@ -37,7 +59,7 @@ function importFunctions(options: FMTemplateOptions): string {
   }
 }
 
-function exportDefault(options: FMTemplateOptions) {
+function exportDefault(options: FiremynaTemplateOptions) {
   switch (options.module) {
     case "esm":
       return "export default";

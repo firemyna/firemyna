@@ -1,22 +1,21 @@
+import { relative, resolve } from "path";
 import {
   buildFunctions,
-  FMOptions,
-  parseFunction,
+  includedFunction,
   listDependencies,
   listFunctions,
   parseDependencies,
+  parseFunction,
   stringifyFunctionsIndex,
-  includedFunction,
 } from "..";
-import { resolve, relative } from "path";
+import { FiremynaConfigResolved } from "../../config";
 
 describe("Firemyna", () => {
-  const functionsBuildPath = resolve(__dirname, "fixtures/build");
+  const buildPath = resolve(__dirname, "fixtures/build");
   const defaultFunctionsPath = resolve(__dirname, "fixtures/basic");
-  const options: FMOptions = {
-    mode: "build",
+  const options: FiremynaConfigResolved = {
     functionsPath: defaultFunctionsPath,
-    functionsBuildPath,
+    buildPath,
   };
 
   let cwd: string;
@@ -35,7 +34,7 @@ describe("Firemyna", () => {
       const result = await buildFunctions({
         ...options,
         functionsPath,
-        functionsBuildPath,
+        buildPath,
       });
 
       expect(Object.keys(result).sort()).toEqual([
@@ -49,8 +48,8 @@ describe("Firemyna", () => {
       expect(
         result["a.js"]?.outputFiles?.map((file) => file.path).sort()
       ).toEqual([
-        resolve(functionsBuildPath, "a.js"),
-        resolve(functionsBuildPath, "a.js.map"),
+        resolve(buildPath, "functions/a.js"),
+        resolve(buildPath, "functions/a.js.map"),
       ]);
 
       expect(typeof result["a.js"]?.outputFiles?.[0]?.text).toBe("string");
@@ -82,7 +81,7 @@ describe("Firemyna", () => {
       const result = stringifyFunctionsIndex(list, {
         ...options,
         functionsPath,
-        functionsBuildPath,
+        buildPath,
       });
       expect(result).toBe(
         `export { default as a } from "./a.js";
@@ -106,7 +105,7 @@ export { default as d } from "./d.js";`
       const result = stringifyFunctionsIndex(list, {
         ...options,
         functionsPath,
-        functionsBuildPath,
+        buildPath,
         functionsInitPath: resolve(process.cwd(), "fixtures/init.ts"),
       });
       expect(result).toBe(
@@ -123,7 +122,7 @@ export { default as b } from "./b.js";`
       const list = await listFunctions({
         ...options,
         functionsPath,
-        functionsBuildPath,
+        buildPath,
       });
       expect(list).toEqual([
         {
@@ -150,7 +149,7 @@ export { default as b } from "./b.js";`
       const list = await listFunctions({
         ...options,
         functionsPath,
-        functionsBuildPath,
+        buildPath,
       });
       expect(list).toEqual([
         {
@@ -177,7 +176,7 @@ export { default as b } from "./b.js";`
       const list = await listFunctions({
         ...options,
         functionsPath,
-        functionsBuildPath,
+        buildPath,
       });
       expect(list).toEqual([
         {
@@ -220,7 +219,7 @@ export { default as b } from "./b.js";`
       const list = await listFunctions({
         ...options,
         functionsPath,
-        functionsBuildPath,
+        buildPath,
       });
       expect(list).toEqual([
         {
@@ -240,7 +239,7 @@ export { default as b } from "./b.js";`
         ...options,
         functionsPath,
         functionsIgnorePaths: [/index\.ts/, /(a|e)\.[jt]s/],
-        functionsBuildPath,
+        buildPath,
       });
       expect(list).toEqual([
         {
@@ -268,7 +267,7 @@ export { default as b } from "./b.js";`
         ...options,
         functionsPath,
         onlyFunctions: ["a", "c"],
-        functionsBuildPath,
+        buildPath,
       });
       expect(list).toEqual([
         {

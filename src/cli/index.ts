@@ -1,75 +1,86 @@
 #!/usr/bin/env node
 
+import cp, { ExecOptions } from "child_process";
 import { Option, program } from "commander";
-// import libraryPackageJSON from "../../package.json";
+import { BuildIncremental, BuildResult } from "esbuild";
+import { copyFile, mkdir, readFile, rm, writeFile } from "fs/promises";
+import { difference, flatten, remove, uniq } from "js-fns";
+import { parse as parsePath, resolve } from "path";
+import {
+  configPath,
+  FiremynaConfigResolved,
+  FiremynaMode,
+  FiremynaPreset,
+  tryLoadConfig as loadConfig,
+} from "../config";
 import {
   buildFile,
   buildFunctions,
-  FMFunction,
-  FMMode,
-  FMOptions,
+  FiremynaFunction,
   FMPackageJSON,
   listDependencies,
   parseDependencies,
   stringifyFunctionsIndex,
   watchListFunction,
 } from "../functions";
-import { readFile, writeFile, mkdir, rm, copyFile } from "fs/promises";
-import { difference, flatten, remove, uniq } from "js-fns";
-import { resolve, parse as parsePath, relative } from "path";
-import cp, { ExecOptions } from "child_process";
-import { BuildIncremental, BuildResult } from "esbuild";
 import {
   getFunctionBuildPath,
   getHostingBuildPath,
   getModeBuildPath,
 } from "../options";
-import { httpFunctionTemplate } from "../templates";
+import { firemynaConfigTemplate, httpFunctionTemplate } from "../templates";
 
-// program.version(libraryPackageJSON.version);
+program.option("--functions [path/to/functions]", "Specify the functions path");
 
-program.option("--functions [functionsPath]", "Specify the functions path");
+program.option("--build [path/to/build]", "Specify the build path");
 
-program.option("--build [buildPath]", "Specify the build path");
+program.option("--config [path/to/config.ts]", "Specify the config path");
 
-program.addOption(
-  new Option("--preset <preset>", "The preset to use").choices([
-    "astro",
-    "cra",
-    "vite",
-    "next",
-  ])
-);
+const presetOption = new Option(
+  "--preset <preset>",
+  "The preset to use"
+).choices(["astro", "cra", "vite", "next"]);
 
-function getOptions(mode: FMMode, commandOptions: any) {
+program.addOption(presetOption);
+
+async function getConfig(mode: FiremynaMode, commandOptions: any) {
   const cliOptions = {
     ...program.opts(),
     ...commandOptions,
   };
 
-  const options = presetOptions(mode, cliOptions.preset);
+  const loadedConfig = await loadConfig(cliOptions.config);
+
+  const preset =
+    (cliOptions.preset as FiremynaPreset | undefined) || loadedConfig?.preset;
+
+  const config: FiremynaConfigResolved = preset
+    ? presetConfig(mode, preset)
+    : defaultConfig(mode);
+
+  if (preset) config.preset = preset;
 
   if (cliOptions.build)
-    options.buildPath = resolve(process.cwd(), cliOptions.build);
+    config.buildPath = resolve(process.cwd(), cliOptions.build);
 
   if (cliOptions.functions)
-    options.functionsPath = resolve(process.cwd(), cliOptions.functions);
+    config.functionsPath = resolve(process.cwd(), cliOptions.functions);
 
   if (cliOptions.config)
-    options.functionsRuntimeConfigPath = commandOptions.config;
+    config.functionsRuntimeConfigPath = commandOptions.config;
 
-  return { options, cliOptions };
+  return { config: config as FiremynaConfigResolved, cliOptions };
 }
 
 program
   .command("build")
   .description("build the Firebase project")
   .action(async (commandOptions) => {
-    const { options, cliOptions } = getOptions("build", commandOptions);
+    const { config, cliOptions } = await getConfig("build", commandOptions);
 
     const [functions, { pkg }] = await Promise.all([
-      buildFunctions(options),
-      prepareBuild(options),
+      buildFunctions(config),
+      prepareBuild("build", config),
     ]);
 
     await Promise.all(Object.values(functions).map(writeBuild));
@@ -89,7 +100,7 @@ program
     const unusedDeps = remove(difference(deps, sourceDeps), "firebase-admin");
 
     await exec(`npm uninstall --package-lock-only ${unusedDeps.join(" ")}`, {
-      cwd: options.buildPath,
+      cwd: config.buildPath,
     });
 
     switch (cliOptions.preset) {
@@ -107,7 +118,7 @@ program
           stdio: "inherit",
           env: {
             ...process.env,
-            BUILD_PATH: getHostingBuildPath(options.buildPath),
+            BUILD_PATH: getHostingBuildPath(config.buildPath),
           },
         });
         break;
@@ -128,35 +139,35 @@ program
   .description("start the Firebase project")
   .option("--config [runtimeConfig]", "Specify the path to runtime config")
   .action(async (commandOptions) => {
-    const { options, cliOptions } = getOptions("watch", commandOptions);
+    const { config, cliOptions } = await getConfig("watch", commandOptions);
 
-    await prepareBuild(options);
+    await prepareBuild("watch", config);
 
     const builds: Record<string, BuildIncremental> = {};
-    let functions: FMFunction[] = [];
+    let functions: FiremynaFunction[] = [];
 
-    async function startBuilding(fn: FMFunction) {
-      const build = await incrementalBuild(options, fn);
+    async function startBuilding(fn: FiremynaFunction) {
+      const build = await incrementalBuild(config, fn);
       builds[fn.name] = build;
       await writeBuild(build);
     }
 
     async function buildIndex() {
-      const indexContents = stringifyFunctionsIndex(functions, options);
+      const indexContents = stringifyFunctionsIndex(functions, config);
       const build = await buildFile({
         file: "index.js",
-        buildPath: getFunctionBuildPath(options.buildPath),
+        buildPath: getFunctionBuildPath(config.buildPath),
         input: {
           type: "contents",
           contents: indexContents,
         },
-        resolvePath: options.functionsPath,
-        options,
+        resolvePath: config.functionsPath,
+        config: config,
       });
       return writeBuild(build);
     }
 
-    watchListFunction(options, async (event) => {
+    watchListFunction(config, async (event) => {
       switch (event.type) {
         case "initial": {
           functions = event.functions;
@@ -167,7 +178,7 @@ program
           ]);
 
           cp.spawn("npx", ["firebase", "serve", "--only", "functions"], {
-            cwd: options.buildPath,
+            cwd: config.buildPath,
             shell: true,
             stdio: "inherit",
           });
@@ -225,44 +236,50 @@ program
 program
   .command("init")
   .description("init a Firebase project")
+  .addOption(presetOption)
   .action(async (commandOptions) => {
-    const { options } = getOptions("build", commandOptions);
+    const { config } = await getConfig("build", commandOptions);
 
-    await mkdir(options.functionsPath, { recursive: true });
+    await mkdir(config.functionsPath, { recursive: true });
 
-    await writeFile(
-      resolve(options.functionsPath, "hello.ts"),
-      httpFunctionTemplate({
-        // TODO: Get it from the options
-        type: "ts",
-        module: "esm",
-      })
-    );
+    await Promise.all([
+      writeFile(
+        resolve(config.functionsPath, "hello.ts"),
+        httpFunctionTemplate({
+          // TODO: Get it from the config
+          type: "ts",
+          module: "esm",
+        })
+      ),
+
+      writeFile(
+        resolve(process.cwd(), configPath("ts")),
+        firemynaConfigTemplate("ts", config.preset!)
+      ),
+    ]);
   });
 
 program.parse();
 
-export type FMPreset = "astro" | "cra" | "vite" | "next";
-
-function presetOptions(mode: FMMode, preset: FMPreset): FMOptions {
+function presetConfig(
+  mode: FiremynaMode,
+  preset: FiremynaPreset
+): FiremynaConfigResolved {
   switch (preset) {
     case "astro":
       return {
-        mode,
         functionsPath: "src/functions",
         buildPath: getModeBuildPath(mode, "dist"),
       };
 
     case "cra":
       return {
-        mode,
         functionsPath: "src/functions",
         buildPath: getModeBuildPath(mode, "build"),
       };
 
     case "vite":
       return {
-        mode,
         functionsPath: "src/functions",
         buildPath: getModeBuildPath(mode, "dist"),
       };
@@ -271,6 +288,13 @@ function presetOptions(mode: FMMode, preset: FMPreset): FMOptions {
       // @ts-ignore TODO
       return {};
   }
+}
+
+function defaultConfig(mode: FiremynaMode) {
+  return {
+    functionsPath: "app/functions",
+    buildPath: getModeBuildPath(mode, "build"),
+  };
 }
 
 function exec(cmd: string, args: ExecOptions) {
@@ -282,12 +306,15 @@ function exec(cmd: string, args: ExecOptions) {
   });
 }
 
-async function prepareBuild(options: FMOptions) {
-  await rm(options.buildPath, { recursive: true, force: true });
-  await mkdir(getFunctionBuildPath(options.buildPath), { recursive: true });
+async function prepareBuild(
+  mode: FiremynaMode,
+  config: FiremynaConfigResolved
+) {
+  await rm(config.buildPath, { recursive: true, force: true });
+  await mkdir(getFunctionBuildPath(config.buildPath), { recursive: true });
 
   function copyToBuild(name: string, out?: string) {
-    return copyFile(name, resolve(options.buildPath, out || name));
+    return copyFile(name, resolve(config.buildPath, out || name));
   }
 
   const pkg: FMPackageJSON = JSON.parse(await readFile("package.json", "utf8"));
@@ -295,20 +322,20 @@ async function prepareBuild(options: FMOptions) {
   Object.assign(pkg, {
     main: "functions/index.js",
     engines: {
-      // TODO: Derive from the options
+      // TODO: Derive from the config
       node: "14",
     },
   });
 
   await Promise.all<any>([
-    writeFile(resolve(options.buildPath, "package.json"), JSON.stringify(pkg)),
+    writeFile(resolve(config.buildPath, "package.json"), JSON.stringify(pkg)),
 
     copyToBuild("package-lock.json"),
 
     copyToBuild(".firebaserc"),
 
     writeFile(
-      resolve(options.buildPath, "firebase.json"),
+      resolve(config.buildPath, "firebase.json"),
       JSON.stringify(
         {
           hosting: {
@@ -324,9 +351,9 @@ async function prepareBuild(options: FMOptions) {
       )
     ),
 
-    options.mode === "watch" &&
-      options.functionsRuntimeConfigPath &&
-      copyToBuild(options.functionsRuntimeConfigPath, ".runtimeconfig.json"),
+    mode === "watch" &&
+      config.functionsRuntimeConfigPath &&
+      copyToBuild(config.functionsRuntimeConfigPath, ".runtimeconfig.json"),
   ]);
 
   return { pkg };
@@ -338,15 +365,18 @@ function writeBuild(build: BuildIncremental | BuildResult | undefined) {
   );
 }
 
-async function incrementalBuild(options: FMOptions, fn: FMFunction) {
+async function incrementalBuild(
+  config: FiremynaConfigResolved,
+  fn: FiremynaFunction
+) {
   const file = `${fn.name}.js`;
   return buildFile({
     file,
-    buildPath: getFunctionBuildPath(options.buildPath),
+    buildPath: getFunctionBuildPath(config.buildPath),
     input: { type: "entry", path: fn.path },
     resolvePath: parsePath(fn.path).dir,
     bundle: true,
-    options,
+    config,
     incremental: true,
   });
 }

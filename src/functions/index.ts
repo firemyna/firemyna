@@ -7,64 +7,12 @@ import { parse as parseSource } from "acorn";
 import { walk } from "estree-walker";
 import chokidar from "chokidar";
 import { getFunctionBuildPath } from "../options";
-
-/**
- * The Firemyna mode.
- */
-export type FMMode = "build" | "watch";
-
-/**
- * The Firebase Functions runtime version.
- */
-export type FMFunctionsRuntime =
-  | "node10"
-  | "node14"
-  | "node14"
-  | "node14"
-  | "node16";
-
-/**
- * Firemyna options.
- */
-export interface FMOptions {
-  /**
-   * The build mode.
-   */
-  mode: FMMode;
-  /**
-   * The path (relative to cwd or absolute) to the functions root directory.
-   */
-  functionsPath: string;
-  /**
-   * The functions build path.
-   */
-  buildPath: string;
-  /**
-   * The functions to build.
-   */
-  onlyFunctions?: string[];
-  /**
-   * Specify functions ignore patterns.
-   */
-  functionsIgnorePaths?: RegExp[];
-  /**
-   * The init module path (relative to cwd or absolute).
-   */
-  functionsInitPath?: string;
-  /**
-   * The Functions runtime version.
-   */
-  functionsRuntime?: FMFunctionsRuntime;
-  /**
-   * The Functions runtime config path.
-   */
-  functionsRuntimeConfigPath?: string;
-}
+import { FiremynaConfig, FiremynaConfigResolved } from "../config";
 
 /**
  * Firebase Function defenition.
  */
-export interface FMFunction {
+export interface FiremynaFunction {
   /**
    * The path relative to the workspace root.
    */
@@ -75,14 +23,14 @@ export interface FMFunction {
   name: string;
 }
 
-export type FMFunctionsBuild = Record<string, BuildResult>;
+export type FiremynaFunctionsBuild = Record<string, BuildResult>;
 
 export async function buildFunctions(
-  options: FMOptions
-): Promise<FMFunctionsBuild> {
-  const fns = await listFunctions(options);
-  const indexContents = stringifyFunctionsIndex(fns, options);
-  const build: FMFunctionsBuild = {};
+  config: FiremynaConfigResolved
+): Promise<FiremynaFunctionsBuild> {
+  const fns = await listFunctions(config);
+  const indexContents = stringifyFunctionsIndex(fns, config);
+  const build: FiremynaFunctionsBuild = {};
 
   await Promise.all(
     fns
@@ -90,41 +38,41 @@ export async function buildFunctions(
         const file = `${fn.name}.js`;
         build[file] = await buildFile({
           file,
-          buildPath: getFunctionBuildPath(options.buildPath),
+          buildPath: getFunctionBuildPath(config.buildPath),
           input: {
             type: "contents",
             contents: await readFile(fn.path, "utf8"),
           },
           resolvePath: parsePath(fn.path).dir,
           bundle: true,
-          options,
+          config: config,
         });
       })
       .concat([
         buildFile({
           file: "index.js",
-          buildPath: getFunctionBuildPath(options.buildPath),
+          buildPath: getFunctionBuildPath(config.buildPath),
           input: {
             type: "contents",
             contents: indexContents,
           },
-          resolvePath: options.functionsPath,
-          options,
+          resolvePath: config.functionsPath,
+          config: config,
         }).then((result) => {
           build["index.js"] = result;
         }),
 
-        options.functionsInitPath &&
-          readFile(options.functionsInitPath, "utf8").then((contents) =>
+        config.functionsInitPath &&
+          readFile(config.functionsInitPath, "utf8").then((contents) =>
             buildFile({
               file: "init.js",
-              buildPath: getFunctionBuildPath(options.buildPath),
+              buildPath: getFunctionBuildPath(config.buildPath),
               input: {
                 type: "contents",
                 contents,
               },
-              resolvePath: parsePath(options.functionsInitPath!).dir,
-              options,
+              resolvePath: parsePath(config.functionsInitPath!).dir,
+              config: config,
             }).then((result) => {
               build["init.js"] = result;
             })
@@ -135,18 +83,16 @@ export async function buildFunctions(
   return build;
 }
 
-export function watchFunctions(options: FMOptions) {}
-
 /**
  * Generates functions index file string.
  *
  * @param list - the functions list
- * @param options - the Firemyna options
+ * @param config - the Firemyna config
  * @returns stringified index file
  */
 export function stringifyFunctionsIndex(
-  list: FMFunction[],
-  { functionsInitPath }: FMOptions
+  list: FiremynaFunction[],
+  { functionsInitPath }: FiremynaConfig
 ) {
   return (functionsInitPath ? [`import "./init.js";`] : [])
     .concat(
@@ -170,15 +116,17 @@ const fnRegExp = /^.+\.[tj]sx?$/;
 /**
  * Lists all functions in the functions directory.
  *
- * @param - the Firemyna options
+ * @param - the Firemyna config
  * @returns the list of functions
  */
-export async function listFunctions(options: FMOptions): Promise<FMFunction[]> {
-  const { functionsPath } = options;
+export async function listFunctions(
+  config: FiremynaConfigResolved
+): Promise<FiremynaFunction[]> {
+  const { functionsPath } = config;
   const dir = await readdir(functionsPath);
 
   return sweep(
-    await Promise.all<FMFunction | undefined>(
+    await Promise.all<FiremynaFunction | undefined>(
       dir.map(async (itemPath) => {
         const fullPath = resolve(functionsPath, itemPath);
         const path = await findFunctionPath(fullPath);
@@ -187,48 +135,48 @@ export async function listFunctions(options: FMOptions): Promise<FMFunction[]> {
         const { name } = parsePath(itemPath);
         const fn = { name, path };
 
-        if (includedFunction(options, fn)) return fn;
+        if (includedFunction(config, fn)) return fn;
       })
     )
   );
 }
 
-export type FMWatchCallback = (event: FMWatchEvent) => void;
+export type FiremynaWatchCallback = (event: FiremynaWatchEvent) => void;
 
-export type FMWatchEvent =
-  | FMWatchEventInitial
-  | FMWatchEventAdd
-  | FMWatchEventUnlink
-  | FMWatchEventChange;
+export type FiremynaWatchEvent =
+  | FiremynaWatchEventInitial
+  | FiremynaWatchEventAdd
+  | FiremynaWatchEventUnlink
+  | FiremynaWatchEventChange;
 
-export interface FMWatchEventInitial {
+export interface FiremynaWatchEventInitial {
   type: "initial";
-  functions: FMFunction[];
+  functions: FiremynaFunction[];
 }
 
-export interface FMWatchEventAdd {
+export interface FiremynaWatchEventAdd {
   type: "add";
-  function: FMFunction;
+  function: FiremynaFunction;
 }
 
-export interface FMWatchEventUnlink {
+export interface FiremynaWatchEventUnlink {
   type: "unlink";
-  function: FMFunction;
+  function: FiremynaFunction;
 }
 
-export interface FMWatchEventChange {
+export interface FiremynaWatchEventChange {
   type: "change";
-  function: FMFunction;
+  function: FiremynaFunction;
 }
 
 export async function watchListFunction(
-  options: FMOptions,
-  callback: FMWatchCallback
+  config: FiremynaConfigResolved,
+  callback: FiremynaWatchCallback
 ) {
-  const functions = await listFunctions(options);
+  const functions = await listFunctions(config);
   callback({ type: "initial", functions });
 
-  const watcher = chokidar.watch(options.functionsPath, {
+  const watcher = chokidar.watch(config.functionsPath, {
     persistent: true,
     depth: 1,
     ignoreInitial: true,
@@ -239,8 +187,8 @@ export async function watchListFunction(
       case "add":
       case "change":
       case "unlink": {
-        const fn = parseFunction(options, path);
-        if (!fn || !includedFunction(options, fn)) return;
+        const fn = parseFunction(config, path);
+        if (!fn || !includedFunction(config, fn)) return;
 
         callback({ type: event, function: fn });
       }
@@ -252,16 +200,16 @@ export async function watchListFunction(
  * Checks if the specified path is a function and if true, returns its
  * definition object.
  *
- * @param options - the Firemyna options
+ * @param config - the Firemyna config
  * @param functionPath - the path to function to find function in
  * @returns the function object
  */
 export function parseFunction(
-  options: FMOptions,
+  config: FiremynaConfigResolved,
   functionPath: string
-): FMFunction | undefined {
+): FiremynaFunction | undefined {
   const path = relative(process.cwd(), functionPath);
-  const relativePath = relative(options.functionsPath, functionPath);
+  const relativePath = relative(config.functionsPath, functionPath);
   const parsedPath = parsePath(relativePath);
 
   if (parsedPath.dir) {
@@ -280,13 +228,13 @@ export function parseFunction(
  * Tests if the function is not ignored and if only list if present that it's
  * in it
  *
- * @param options - the Firemyna options
+ * @param config - the Firemyna config
  * @param fn - the function to test
  * @returns true if the function is included in build
  */
 export function includedFunction(
-  { functionsIgnorePaths, onlyFunctions }: FMOptions,
-  fn: FMFunction
+  { functionsIgnorePaths, onlyFunctions }: FiremynaConfig,
+  fn: FiremynaFunction
 ): boolean {
   return (
     !functionsIgnorePaths?.find((regex) => regex.test(fn.path)) &&
@@ -321,7 +269,7 @@ export interface BuildFileProps<Incremental extends boolean | undefined> {
   input: BuildFileInput;
   resolvePath: string;
   bundle?: boolean;
-  options: FMOptions;
+  config: FiremynaConfig;
   incremental?: Incremental;
 }
 
@@ -349,13 +297,13 @@ export function buildFile<Incremental extends boolean | undefined>({
   input,
   resolvePath,
   bundle,
-  options,
+  config,
   incremental,
 }: BuildFileProps<Incremental>) {
   return build({
     bundle,
     platform: "node",
-    target: options.functionsRuntime || "node14",
+    target: config.functionsRuntime || "node14",
     sourcemap: "external",
     format: "cjs",
     outfile: resolve(buildPath, file),
@@ -381,7 +329,7 @@ export function buildFile<Incremental extends boolean | undefined>({
 }
 
 export interface FMPackageJSON {
-  main: string;
+  main?: string;
   engines?: {
     node?: string;
     npm?: string;
