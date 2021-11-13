@@ -1,6 +1,6 @@
 {
   "name": "firemyna",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Firebase application framework",
   "main": "lib/index.js",
   "bin": {
