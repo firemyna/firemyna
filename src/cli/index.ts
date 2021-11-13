@@ -76,7 +76,7 @@ program
   .command("build")
   .description("build the Firebase project")
   .action(async (commandOptions) => {
-    const { config, cliOptions } = await getConfig("build", commandOptions);
+    const { config } = await getConfig("build", commandOptions);
 
     const [functions, { pkg }] = await Promise.all([
       buildFunctions(config),
@@ -103,7 +103,7 @@ program
       cwd: config.buildPath,
     });
 
-    switch (cliOptions.preset) {
+    switch (config.preset) {
       case "astro": {
         cp.spawn("npx", ["astro", "build"], {
           shell: true,
@@ -139,7 +139,7 @@ program
   .description("start the Firebase project")
   .option("--config [runtimeConfig]", "Specify the path to runtime config")
   .action(async (commandOptions) => {
-    const { config, cliOptions } = await getConfig("watch", commandOptions);
+    const { config } = await getConfig("watch", commandOptions);
 
     await prepareBuild("watch", config);
 
@@ -206,7 +206,7 @@ program
       }
     });
 
-    switch (cliOptions.preset) {
+    switch (config.preset) {
       case "astro": {
         cp.spawn("npx", ["astro", "dev"], {
           shell: true,
