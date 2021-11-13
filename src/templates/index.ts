@@ -3,12 +3,12 @@ import {
   FiremynaConfig,
   FiremynaFormat,
   FiremynaPreset,
-  FiremynaTemplateModule,
+  FiremynaModule,
 } from "../config";
 
 export interface FiremynaTemplateOptions {
-  type: FiremynaFormat;
-  module: FiremynaTemplateModule;
+  format: FiremynaFormat;
+  module: FiremynaModule;
 }
 
 export function httpFunctionTemplate(options: FiremynaTemplateOptions): string {
@@ -46,7 +46,7 @@ export const config =`;
 function importFunctions(options: FiremynaTemplateOptions): string {
   switch (options.module) {
     case "esm":
-      switch (options.type) {
+      switch (options.format) {
         case "js":
           return 'import functions from "firebase-functions";';
 

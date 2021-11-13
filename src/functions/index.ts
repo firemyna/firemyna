@@ -6,7 +6,7 @@ import NodeResolve from "@esbuild-plugins/node-resolve";
 import { parse as parseSource } from "acorn";
 import { walk } from "estree-walker";
 import chokidar from "chokidar";
-import { getFunctionBuildPath } from "../options";
+import { getFunctionsBuildPath } from "../paths";
 import { FiremynaConfig, FiremynaConfigResolved } from "../config";
 
 /**
@@ -38,7 +38,7 @@ export async function buildFunctions(
         const file = `${fn.name}.js`;
         build[file] = await buildFile({
           file,
-          buildPath: getFunctionBuildPath(config.buildPath),
+          buildPath: getFunctionsBuildPath(config.buildPath),
           input: {
             type: "contents",
             contents: await readFile(fn.path, "utf8"),
@@ -51,7 +51,7 @@ export async function buildFunctions(
       .concat([
         buildFile({
           file: "index.js",
-          buildPath: getFunctionBuildPath(config.buildPath),
+          buildPath: getFunctionsBuildPath(config.buildPath),
           input: {
             type: "contents",
             contents: indexContents,
@@ -66,7 +66,7 @@ export async function buildFunctions(
           readFile(config.functionsInitPath, "utf8").then((contents) =>
             buildFile({
               file: "init.js",
-              buildPath: getFunctionBuildPath(config.buildPath),
+              buildPath: getFunctionsBuildPath(config.buildPath),
               input: {
                 type: "contents",
                 contents,

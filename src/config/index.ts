@@ -1,6 +1,7 @@
 import { transform } from "esbuild";
 import { readFile, rm, writeFile } from "fs/promises";
 import { resolve, parse } from "path";
+import { getConfigPath } from "../paths";
 
 /**
  * The source code format.
@@ -10,12 +11,12 @@ export type FiremynaFormat = "ts" | "js";
 /**
  * The export module type.
  */
-export type FiremynaTemplateModule = "cjs" | "esm";
+export type FiremynaModule = "cjs" | "esm";
 
 /**
  * The config preset.
  */
-export type FiremynaPreset = "astro" | "cra" | "vite" | "next";
+export type FiremynaPreset = "astro" | "cra" | "vite";
 
 /**
  * The work mode:
@@ -122,7 +123,7 @@ export async function tryReadAnyConfig() {
 export async function tryReadConfig(
   format: FiremynaFormat
 ): Promise<TryReadConfigResult> {
-  const path = configPath(format);
+  const path = getConfigPath(format);
   const source = await readFile(path, "utf-8");
   return { format, path, source };
 }
@@ -137,8 +138,4 @@ export async function readConfigFromPath(
   } catch (error) {
     throw new Error(`Failed to read the config file located at ${path}`);
   }
-}
-
-export function configPath(format: FiremynaFormat) {
-  return resolve(process.cwd(), `firemyna.config.${format}`);
 }

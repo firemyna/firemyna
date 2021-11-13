@@ -7,7 +7,6 @@ import { copyFile, mkdir, readFile, rm, writeFile } from "fs/promises";
 import { difference, flatten, remove, uniq } from "js-fns";
 import { parse as parsePath, resolve } from "path";
 import {
-  configPath,
   FiremynaConfigResolved,
   FiremynaMode,
   FiremynaPreset,
@@ -24,10 +23,11 @@ import {
   watchListFunction,
 } from "../functions";
 import {
-  getFunctionBuildPath,
+  getFunctionsBuildPath,
   getHostingBuildPath,
-  getModeBuildPath,
-} from "../options";
+  getBuildEnvPath,
+  getConfigPath,
+} from "../paths";
 import { firemynaConfigTemplate, httpFunctionTemplate } from "../templates";
 
 program.option("--functions [path/to/functions]", "Specify the functions path");
@@ -156,7 +156,7 @@ program
       const indexContents = stringifyFunctionsIndex(functions, config);
       const build = await buildFile({
         file: "index.js",
-        buildPath: getFunctionBuildPath(config.buildPath),
+        buildPath: getFunctionsBuildPath(config.buildPath),
         input: {
           type: "contents",
           contents: indexContents,
@@ -247,13 +247,13 @@ program
         resolve(config.functionsPath, "hello.ts"),
         httpFunctionTemplate({
           // TODO: Get it from the config
-          type: "ts",
+          format: "ts",
           module: "esm",
         })
       ),
 
       writeFile(
-        resolve(process.cwd(), configPath("ts")),
+        resolve(process.cwd(), getConfigPath("ts")),
         firemynaConfigTemplate("ts", config.preset!)
       ),
     ]);
@@ -269,31 +269,27 @@ function presetConfig(
     case "astro":
       return {
         functionsPath: "src/functions",
-        buildPath: getModeBuildPath(mode, "dist"),
+        buildPath: getBuildEnvPath(mode, "dist"),
       };
 
     case "cra":
       return {
         functionsPath: "src/functions",
-        buildPath: getModeBuildPath(mode, "build"),
+        buildPath: getBuildEnvPath(mode, "build"),
       };
 
     case "vite":
       return {
         functionsPath: "src/functions",
-        buildPath: getModeBuildPath(mode, "dist"),
+        buildPath: getBuildEnvPath(mode, "dist"),
       };
-
-    case "next":
-      // @ts-ignore TODO
-      return {};
   }
 }
 
 function defaultConfig(mode: FiremynaMode) {
   return {
     functionsPath: "app/functions",
-    buildPath: getModeBuildPath(mode, "build"),
+    buildPath: getBuildEnvPath(mode, "build"),
   };
 }
 
@@ -311,7 +307,7 @@ async function prepareBuild(
   config: FiremynaConfigResolved
 ) {
   await rm(config.buildPath, { recursive: true, force: true });
-  await mkdir(getFunctionBuildPath(config.buildPath), { recursive: true });
+  await mkdir(getFunctionsBuildPath(config.buildPath), { recursive: true });
 
   function copyToBuild(name: string, out?: string) {
     return copyFile(name, resolve(config.buildPath, out || name));
@@ -372,7 +368,7 @@ async function incrementalBuild(
   const file = `${fn.name}.js`;
   return buildFile({
     file,
-    buildPath: getFunctionBuildPath(config.buildPath),
+    buildPath: getFunctionsBuildPath(config.buildPath),
     input: { type: "entry", path: fn.path },
     resolvePath: parsePath(fn.path).dir,
     bundle: true,
