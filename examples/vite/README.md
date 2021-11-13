@@ -71,8 +71,8 @@ Replace the Vite commands with Firemyna:
 -    "dev": "vite",
 -    "build": "tsc && vite build",
 -    "serve": "vite preview"
-+    "dev": "firemyna start --preset vite",
-+    "build": "firemyna build --preset vite"
++    "dev": "firemyna start",
++    "build": "firemyna build"
    },
    "dependencies": {
      "firebase-admin": "^10.0.0",
@@ -80,13 +80,12 @@ Replace the Vite commands with Firemyna:
 
 ### Init Firemyna
 
-Now, initialize the Firemyna. It will only generate functions directory with a demo function:
+Now, initialize the Firemyna. It will generate the Firemyna config file and
+functions directory with a demo function:
 
 ```bash
 npx firemyna init --preset vite
 ```
-
-> _You can also create a directory `src/functions` and add files exposing Firebase functions as the default exports. The name of the file will be the name of the function._
 
 ## Developing
 

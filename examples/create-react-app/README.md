@@ -47,8 +47,8 @@ Replace the Create React App commands with Firemyna:
    "scripts": {
 -    "start": "react-scripts start",
 -    "build": "react-scripts build",
-+    "start": "firemyna start --preset cra",
-+    "build": "firemyna build --preset cra",
++    "start": "firemyna start",
++    "build": "firemyna build",
      "test": "react-scripts test",
      "eject": "react-scripts eject"
    },
@@ -56,13 +56,12 @@ Replace the Create React App commands with Firemyna:
 
 ### Init Firemyna
 
-Now, initialize the Firemyna. It will only generate functions directory with a demo function:
+Now, initialize the Firemyna. It will generate the Firemyna config file and
+functions directory with a demo function:
 
 ```bash
 npx firemyna init --preset cra
 ```
-
-> _You can also create a directory `src/functions` and add files exposing Firebase functions as the default exports. The name of the file will be the name of the function._
 
 ## Building
 

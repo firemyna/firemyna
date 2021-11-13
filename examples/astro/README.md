@@ -94,9 +94,9 @@ Replace the Astro commands with Firemyna:
 -    "start": "astro dev",
 -    "build": "astro build",
 -    "preview": "astro preview"
-+    "dev": "firemyna start --preset astro",
-+    "start": "firemyna start --preset astro",
-+    "build": "firemyna build --preset astro",
++    "dev": "firemyna start",
++    "start": "firemyna start",
++    "build": "firemyna build",
    },
    "devDependencies": {
      "astro": "^0.20.12"
@@ -104,13 +104,12 @@ Replace the Astro commands with Firemyna:
 
 ### Init Firemyna
 
-Now, initialize the Firemyna. It will only generate functions directory with a demo function:
+Now, initialize the Firemyna. It will generate the Firemyna config file and
+functions directory with a demo function:
 
 ```bash
 npx firemyna init --preset astro
 ```
-
-> _You can also create a directory `src/functions` and add files exposing Firebase functions as the default exports. The name of the file will be the name of the function._
 
 ## Developing
 

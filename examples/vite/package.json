@@ -2,13 +2,13 @@
   "name": "firemyna-vite",
   "version": "0.0.0",
   "scripts": {
-    "dev": "firemyna start --preset vite",
-    "build": "firemyna build --preset vite"
+    "dev": "firemyna start",
+    "build": "firemyna build"
   },
   "dependencies": {
     "firebase-admin": "^10.0.0",
     "firebase-functions": "^3.16.0",
-    "firemyna": "^0.5.0",
+    "firemyna": "^0.6.1",
     "preact": "^10.5.13"
   },
   "devDependencies": {
