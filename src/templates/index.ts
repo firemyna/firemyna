@@ -1,21 +1,11 @@
 import { format as formatSource } from "prettier";
-import {
-  FiremynaConfig,
-  FiremynaFormat,
-  FiremynaPreset,
-  FiremynaModule,
-} from "../config";
+import { FiremynaConfig, FiremynaFormat, FiremynaPreset } from "../config";
 
-export interface FiremynaTemplateOptions {
-  format: FiremynaFormat;
-  module: FiremynaModule;
-}
-
-export function httpFunctionTemplate(options: FiremynaTemplateOptions): string {
+export function httpFunctionTemplate(format: FiremynaFormat): string {
   return formatSource(
-    `${importFunctions(options)}
+    `${importFunctions(format)}
 
-${exportDefault(options)} functions.https.onRequest((_request, response) => {
+export default functions.https.onRequest((_request, response) => {
   response.send("Hello, cruel world!");
 });
 `,
@@ -25,7 +15,7 @@ ${exportDefault(options)} functions.https.onRequest((_request, response) => {
 
 export function firemynaConfigTemplate(
   format: FiremynaFormat,
-  preset: FiremynaPreset
+  config: FiremynaConfig
 ): string {
   const prefix =
     format === "ts"
@@ -35,36 +25,17 @@ export const config : FiremynaConfig =`
       : `/** @type {import("firemyna").FiremynaConfig } */
 export const config =`;
 
-  return formatSource(
-    `${prefix} {
-  preset: "${preset}",
-};`,
-    { parser: "babel" }
-  );
+  return formatSource(`${prefix} ${JSON.stringify(config, null, 2)};`, {
+    parser: "babel",
+  });
 }
 
-function importFunctions(options: FiremynaTemplateOptions): string {
-  switch (options.module) {
-    case "esm":
-      switch (options.format) {
-        case "js":
-          return 'import functions from "firebase-functions";';
+function importFunctions(format: FiremynaFormat): string {
+  switch (format) {
+    case "js":
+      return 'import functions from "firebase-functions";';
 
-        case "ts":
-          return 'import * as functions from "firebase-functions";';
-      }
-
-    case "cjs":
-      return 'const functions = require("firebase-functions");';
-  }
-}
-
-function exportDefault(options: FiremynaTemplateOptions) {
-  switch (options.module) {
-    case "esm":
-      return "export default";
-
-    case "cjs":
-      return "module.exports =";
+    case "ts":
+      return 'import * as functions from "firebase-functions";';
   }
 }

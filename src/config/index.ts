@@ -4,14 +4,14 @@ import { resolve, parse } from "path";
 import { getConfigPath } from "../paths";
 
 /**
+ * The Firemyna app environment,
+ */
+export type FiremynaAppEnv = "development" | "test" | "staging" | "production";
+
+/**
  * The source code format.
  */
 export type FiremynaFormat = "ts" | "js";
-
-/**
- * The export module type.
- */
-export type FiremynaModule = "cjs" | "esm";
 
 /**
  * The config preset.
@@ -26,14 +26,9 @@ export type FiremynaPreset = "astro" | "cra" | "vite";
 export type FiremynaMode = "build" | "watch";
 
 /**
- * The Firebase Functions runtime version.
+ * The Firebase Functions Node.js version.
  */
-export type FiremynaFunctionsRuntime =
-  | "node10"
-  | "node14"
-  | "node14"
-  | "node14"
-  | "node16";
+export type FiremynaNode = "10" | "14" | "14" | "14" | "16";
 
 export type FiremynaConfig = Partial<FiremynaConfigResolved>;
 
@@ -41,6 +36,10 @@ export type FiremynaConfig = Partial<FiremynaConfigResolved>;
  * Firemyna config.
  */
 export interface FiremynaConfigResolved {
+  /**
+   * The Functions Node.js version.
+   */
+  node: FiremynaNode;
   /**
    * The config preset.
    */
@@ -72,14 +71,14 @@ export interface FiremynaConfigResolved {
   /**
    * The Functions runtime version.
    */
-  functionsRuntime?: FiremynaFunctionsRuntime;
+  functionsRuntime?: FiremynaNode;
   /**
    * The Functions runtime config path.
    */
   functionsRuntimeConfigPath?: string;
 }
 
-export async function tryLoadConfig(
+export async function loadConfig(
   configPath?: string
 ): Promise<FiremynaConfig | undefined> {
   const configInfo = configPath

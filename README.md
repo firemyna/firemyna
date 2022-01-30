@@ -44,8 +44,26 @@ USAGE
 
 <!-- commands -->
 
+- [`firemyna build [FILE]`](#firemyna-build-file)
 - [`firemyna help [COMMAND]`](#firemyna-help-command)
-- [`firemyna init [FILE]`](#firemyna-init-file)
+- [`firemyna init`](#firemyna-init)
+- [`firemyna start [FILE]`](#firemyna-start-file)
+
+## `firemyna build [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ firemyna build [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+```
+
+_See code: [src/commands/build.ts](https://github.com/firemyna/firemyna/blob/v0.6.1/src/commands/build.ts)_
 
 ## `firemyna help [COMMAND]`
 
@@ -64,24 +82,37 @@ OPTIONS
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v3.2.4/src/commands/help.ts)_
 
-## `firemyna init [FILE]`
+## `firemyna init`
+
+Init Firemyna project
+
+```
+USAGE
+  $ firemyna init
+
+OPTIONS
+  -f, --format=(ts|js)           Source format to generate code
+  -m, --module=(esm|cjs)         [default: esm] Module format to use when generating code
+  -p, --preset=(astro|cra|vite)  (required) Preset to use
+  --cwd=cwd                      [default: /home/koss/src/kossnocorp/firemyna] Current working directory
+```
+
+_See code: [src/commands/init.ts](https://github.com/firemyna/firemyna/blob/v0.6.1/src/commands/init.ts)_
+
+## `firemyna start [FILE]`
 
 describe the command here
 
 ```
 USAGE
-  $ firemyna init [FILE]
+  $ firemyna start [FILE]
 
 OPTIONS
   -f, --force
   -h, --help       show CLI help
   -n, --name=name  name to print
-
-EXAMPLE
-  $ firemyna hello
-  hello world from ./src/hello.ts!
 ```
 
-_See code: [src/commands/init.ts](https://github.com/firemyna/firemyna/blob/v0.6.1/src/commands/init.ts)_
+_See code: [src/commands/start.ts](https://github.com/firemyna/firemyna/blob/v0.6.1/src/commands/start.ts)_
 
 <!-- commandsstop -->

@@ -6,8 +6,9 @@ import NodeResolve from "@esbuild-plugins/node-resolve";
 import { parse as parseSource } from "acorn";
 import { walk } from "estree-walker";
 import chokidar from "chokidar";
-import { getFunctionsBuildPath } from "../paths";
-import { FiremynaConfig, FiremynaConfigResolved } from "../config";
+import { getBuildFunctionsFilePath, getFunctionsBuildPath } from "../paths";
+import { FiremynaConfig } from "../config";
+import { FiremynaBuildConfig } from "../build";
 
 /**
  * Firebase Function defenition.
@@ -26,10 +27,10 @@ export interface FiremynaFunction {
 export type FiremynaFunctionsBuild = Record<string, BuildResult>;
 
 export async function buildFunctions(
-  config: FiremynaConfigResolved
+  buildConfig: FiremynaBuildConfig
 ): Promise<FiremynaFunctionsBuild> {
-  const fns = await listFunctions(config);
-  const indexContents = stringifyFunctionsIndex(fns, config);
+  const fns = await listFunctions(buildConfig);
+  const indexContents = stringifyFunctionsIndex(fns, buildConfig);
   const build: FiremynaFunctionsBuild = {};
 
   await Promise.all(
@@ -38,41 +39,38 @@ export async function buildFunctions(
         const file = `${fn.name}.js`;
         build[file] = await buildFile({
           file,
-          buildPath: getFunctionsBuildPath(config.buildPath),
           input: {
             type: "contents",
-            contents: await readFile(fn.path, "utf8"),
+            contents: await readFile(resolve(buildConfig.cwd, fn.path), "utf8"),
           },
-          resolvePath: parsePath(fn.path).dir,
+          resolvePath: parsePath(resolve(buildConfig.cwd, fn.path)).dir,
           bundle: true,
-          config: config,
+          buildConfig,
         });
       })
       .concat([
         buildFile({
           file: "index.js",
-          buildPath: getFunctionsBuildPath(config.buildPath),
           input: {
             type: "contents",
             contents: indexContents,
           },
-          resolvePath: config.functionsPath,
-          config: config,
+          resolvePath: buildConfig.functionsPath,
+          buildConfig: buildConfig,
         }).then((result) => {
           build["index.js"] = result;
         }),
 
-        config.functionsInitPath &&
-          readFile(config.functionsInitPath, "utf8").then((contents) =>
+        buildConfig.functionsInitPath &&
+          readFile(buildConfig.functionsInitPath, "utf8").then((contents) =>
             buildFile({
               file: "init.js",
-              buildPath: getFunctionsBuildPath(config.buildPath),
               input: {
                 type: "contents",
                 contents,
               },
-              resolvePath: parsePath(config.functionsInitPath!).dir,
-              config: config,
+              resolvePath: parsePath(buildConfig.functionsInitPath!).dir,
+              buildConfig: buildConfig,
             }).then((result) => {
               build["init.js"] = result;
             })
@@ -120,9 +118,9 @@ const fnRegExp = /^.+\.[tj]sx?$/;
  * @returns the list of functions
  */
 export async function listFunctions(
-  config: FiremynaConfigResolved
+  buildConfig: FiremynaBuildConfig
 ): Promise<FiremynaFunction[]> {
-  const { functionsPath } = config;
+  const { functionsPath } = buildConfig;
   const dir = await readdir(functionsPath);
 
   return sweep(
@@ -135,7 +133,7 @@ export async function listFunctions(
         const { name } = parsePath(itemPath);
         const fn = { name, path };
 
-        if (includedFunction(config, fn)) return fn;
+        if (includedFunction(buildConfig, fn)) return fn;
       })
     )
   );
@@ -170,13 +168,13 @@ export interface FiremynaWatchEventChange {
 }
 
 export async function watchListFunction(
-  config: FiremynaConfigResolved,
+  buildConfig: FiremynaBuildConfig,
   callback: FiremynaWatchCallback
 ) {
-  const functions = await listFunctions(config);
+  const functions = await listFunctions(buildConfig);
   callback({ type: "initial", functions });
 
-  const watcher = chokidar.watch(config.functionsPath, {
+  const watcher = chokidar.watch(buildConfig.functionsPath, {
     persistent: true,
     depth: 1,
     ignoreInitial: true,
@@ -187,8 +185,8 @@ export async function watchListFunction(
       case "add":
       case "change":
       case "unlink": {
-        const fn = parseFunction(config, path);
-        if (!fn || !includedFunction(config, fn)) return;
+        const fn = parseFunction(buildConfig, path);
+        if (!fn || !includedFunction(buildConfig, fn)) return;
 
         callback({ type: event, function: fn });
       }
@@ -200,16 +198,16 @@ export async function watchListFunction(
  * Checks if the specified path is a function and if true, returns its
  * definition object.
  *
- * @param config - the Firemyna config
+ * @param buildConfig - the Firemyna build config
  * @param functionPath - the path to function to find function in
  * @returns the function object
  */
 export function parseFunction(
-  config: FiremynaConfigResolved,
+  buildConfig: FiremynaBuildConfig,
   functionPath: string
 ): FiremynaFunction | undefined {
   const path = relative(process.cwd(), functionPath);
-  const relativePath = relative(config.functionsPath, functionPath);
+  const relativePath = relative(buildConfig.functionsPath, functionPath);
   const parsedPath = parsePath(relativePath);
 
   if (parsedPath.dir) {
@@ -233,7 +231,7 @@ export function parseFunction(
  * @returns true if the function is included in build
  */
 export function includedFunction(
-  { functionsIgnorePaths, onlyFunctions }: FiremynaConfig,
+  { functionsIgnorePaths, onlyFunctions }: FiremynaBuildConfig,
   fn: FiremynaFunction
 ): boolean {
   return (
@@ -265,11 +263,10 @@ async function findFunctionPath(path: string): Promise<string | undefined> {
 
 export interface BuildFileProps<Incremental extends boolean | undefined> {
   file: string;
-  buildPath: string;
   input: BuildFileInput;
   resolvePath: string;
   bundle?: boolean;
-  config: FiremynaConfig;
+  buildConfig: FiremynaBuildConfig;
   incremental?: Incremental;
 }
 
@@ -293,20 +290,19 @@ export function buildFile<Incremental extends boolean | undefined>(
 
 export function buildFile<Incremental extends boolean | undefined>({
   file,
-  buildPath,
   input,
   resolvePath,
   bundle,
-  config,
+  buildConfig,
   incremental,
 }: BuildFileProps<Incremental>) {
   return build({
     bundle,
     platform: "node",
-    target: config.functionsRuntime || "node14",
+    target: `node${buildConfig.node}`,
     sourcemap: "external",
     format: "cjs",
-    outfile: resolve(buildPath, file),
+    outfile: getBuildFunctionsFilePath(buildConfig.paths, file),
     entryPoints: input.type === "entry" ? [input.path] : undefined,
     stdin:
       input.type === "contents"
@@ -328,7 +324,7 @@ export function buildFile<Incremental extends boolean | undefined>({
   });
 }
 
-export interface FMPackageJSON {
+export interface FiremynaPackageJSON {
   main?: string;
   engines?: {
     node?: string;
@@ -338,7 +334,7 @@ export interface FMPackageJSON {
   devDependencies?: { [dependency: string]: string };
 }
 
-export function listDependencies(packageJSON: FMPackageJSON): string[] {
+export function listDependencies(packageJSON: FiremynaPackageJSON): string[] {
   return Object.keys(packageJSON.dependencies || {}).concat(
     Object.keys(packageJSON.devDependencies || {})
   );
