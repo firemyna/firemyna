@@ -3,8 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "firemyna start",
-    "start": "firemyna start",
+    "start": "firemyna dev",
     "build": "firemyna build",
     "preview": "firemyna preview"
   },

@@ -71,7 +71,7 @@ Replace the Vite commands with Firemyna:
 -    "dev": "vite",
 -    "build": "tsc && vite build",
 -    "serve": "vite preview"
-+    "dev": "firemyna start",
++    "start": "firemyna dev",
 +    "build": "firemyna build"
    },
    "dependencies": {

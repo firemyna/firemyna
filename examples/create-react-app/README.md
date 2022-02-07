@@ -47,7 +47,7 @@ Replace the Create React App commands with Firemyna:
    "scripts": {
 -    "start": "react-scripts start",
 -    "build": "react-scripts build",
-+    "start": "firemyna start",
++    "start": "firemyna dev",
 +    "build": "firemyna build",
      "test": "react-scripts test",
      "eject": "react-scripts eject"

@@ -1,5 +1,6 @@
 import inquirer from "inquirer";
 import { FiremynaFormat } from "../../config";
+import { FiremynaPreset } from "../../presets";
 
 export async function promptFormat(): Promise<FiremynaFormat> {
   const { format } = await inquirer.prompt({
@@ -12,4 +13,18 @@ export async function promptFormat(): Promise<FiremynaFormat> {
     ],
   });
   return format;
+}
+
+export async function promptPreset(): Promise<FiremynaPreset> {
+  const { preset } = await inquirer.prompt({
+    name: "preset",
+    message: "Select the preset",
+    type: "list",
+    choices: [
+      { name: "Astro", value: "astro" },
+      { name: "Create React App", value: "cra" },
+      { name: "Vite", value: "vite" },
+    ],
+  });
+  return preset;
 }

@@ -1,6 +1,11 @@
 import { format as formatSource } from "prettier";
-import { FiremynaConfig, FiremynaFormat, FiremynaPreset } from "../config";
+import { FiremynaConfig, FiremynaFormat } from "../config";
 
+/**
+ * Generates HTTP function source code.
+ * @param format - the source code format
+ * @returns HTTP function source code
+ */
 export function httpFunctionTemplate(format: FiremynaFormat): string {
   return formatSource(
     `${importFunctions(format)}
@@ -13,6 +18,12 @@ export default functions.https.onRequest((_request, response) => {
   );
 }
 
+/**
+ * Generates Firemyna config file source code.
+ * @param format - the source code format
+ * @param config - the Firemyna config
+ * @returns Firemyna config source code
+ */
 export function firemynaConfigTemplate(
   format: FiremynaFormat,
   config: FiremynaConfig
@@ -30,6 +41,11 @@ export const config =`;
   });
 }
 
+/**
+ * Generates import Functions line source code.
+ * @param format - the source code format
+ * @returns import Functions line source code
+ */
 function importFunctions(format: FiremynaFormat): string {
   switch (format) {
     case "js":

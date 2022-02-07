@@ -36,7 +36,6 @@
   },
   "homepage": "https://github.com/firemyna/firemyna#readme",
   "devDependencies": {
-    "@oclif/dev-cli": "^1.26.0",
     "@types/estree": "0.0.50",
     "@types/jest": "^27.0.2",
     "firebase-admin": "^10.0.0",
@@ -49,9 +48,9 @@
   },
   "dependencies": {
     "@esbuild-plugins/node-resolve": "^0.1.4",
-    "@oclif/command": "^1.8.0",
-    "@oclif/config": "^1.17.0",
-    "@oclif/plugin-help": "^3.2.4",
+    "@oclif/core": "^1.2.1",
+    "@oclif/plugin-help": "^5.1.10",
+    "@oclif/plugin-version": "^1.0.4",
     "@types/inquirer": "^8.1.3",
     "acorn": "^8.5.0",
     "chokidar": "^3.5.2",
@@ -64,10 +63,17 @@
     "prettier": "^2.4.1"
   },
   "oclif": {
-    "commands": "./src/commands",
+    "commands": "./src/cli/commands",
     "bin": "firemyna",
     "plugins": [
-      "@oclif/plugin-help"
+      "@oclif/plugin-help",
+      "@oclif/plugin-version"
+    ],
+    "additionalHelpFlags": [
+      "-h"
+    ],
+    "additionalVersionFlags": [
+      "-v"
     ]
   }
 }
