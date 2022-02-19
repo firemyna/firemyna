@@ -64,7 +64,7 @@ export default class Build extends Command {
     const unusedDeps = remove(difference(deps, sourceDeps), "firebase-admin");
 
     await exec(`npm uninstall --package-lock-only ${unusedDeps.join(" ")}`, {
-      cwd: config.buildPath,
+      cwd: buildConfig.paths.appEnvBuild,
     });
 
     switch (config.preset) {
