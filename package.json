@@ -1,6 +1,6 @@
 {
   "name": "firemyna",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Firebase application framework",
   "main": "lib/index.js",
   "bin": {
@@ -16,9 +16,8 @@
   "scripts": {
     "test": "jest",
     "build": "rm -rf lib && tsc -p tsconfig.lib.json",
-    "prepack": "npm run build && oclif-dev manifest && oclif-dev readme",
-    "postpack": "rm -f oclif.manifest.json",
-    "version": "oclif-dev readme && git add README.md"
+    "prepack": "npm run build && oclif manifest",
+    "postpack": "rm -f oclif.manifest.json"
   },
   "repository": {
     "type": "git",
