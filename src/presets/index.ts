@@ -5,7 +5,7 @@ import { remixPresetCommands } from "./remix";
 /**
  * The config preset.
  */
-export type FiremynaPreset = "astro" | "cra" | "vite" | "remix";
+export type FiremynaPreset = "astro" | "cra" | "vite" | "remix" | "next";
 
 export type FiremynaPresetCommands = {
   "prepare-package-json"?: (pkg: FiremynaPackageJSON) => void;

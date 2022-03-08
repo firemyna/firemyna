@@ -36,6 +36,12 @@ export function presetProjectPaths(
         build: "build",
       };
 
+    case "next":
+      return {
+        src: ".",
+        build: "build",
+      };
+
     case undefined:
       return defaultProjectPaths();
   }

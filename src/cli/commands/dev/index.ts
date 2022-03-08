@@ -173,6 +173,18 @@ export default class Dev extends Command {
 
         break;
       }
+
+      case "next": {
+        const remixChild = cp.spawn("npx", ["next", "dev"], {
+          cwd: buildConfig.cwd,
+          shell: true,
+          env: { ...process.env, NODE_ENV: "development" },
+        });
+
+        logChild({ child: remixChild, formatter: pc.green, label: "Next.js" });
+
+        break;
+      }
     }
   }
 }

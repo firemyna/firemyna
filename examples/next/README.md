@@ -1,13 +1,13 @@
-# Firemyna 💖 Remix
+# Firemyna 💖 Next.js
 
 ## Getting started
 
-### Init Remix project
+### Init Next.js project
 
-First, let's init Remix project following the [official instructions](https://remix.run/docs/en/v1/tutorials/blog) using **Remix App Server** as the target:
+First, let's init Next.js project following the [official instructions](https://nextjs.org/docs/getting-started) :
 
 ```bash
-npx create-remix@latest # Choose Remix App Server!
+npx create-next-app@latest
 cd APP_NAME
 ```
 
@@ -25,41 +25,18 @@ You'll need to add `.firebaserc` with your Firebase project id:
 
 > _It defines the Firebase project id to use when starting the emulator and deploying the app._
 
-### Adjust Remix configuration
-
-Now, we need to adjust the Remix configuration and set [`assetsBuildDirectory`](https://remix.run/docs/en/v1/api/conventions#assetsbuilddirectory) and [`serverBuildPath`](https://remix.run/docs/en/v1/api/conventions#serverbuildpath):
-
-```diff
---- a/remix.config.js
-+++ b/remix.config.js
-@@ -4,8 +4,11 @@
- module.exports = {
-   ignoredRouteFiles: [".*"],
-   // appDirectory: "app",
--  // assetsBuildDirectory: "public/build",
--  // serverBuildPath: "build/index.js",
-+  assetsBuildDirectory:
-+    process.env.NODE_ENV === "development"
-+      ? "public/build"
-+      : "build/production/hosting/build",
-+  serverBuildPath: "build/production/functions/_renderer.js",
-   // publicPath: "/build/",
-   // devServerPort: 8002
- };
-```
-
-> _This change sets the production build paths. The Node.js runtime will deploy as a renderer function, and the assets will deploy to Firebase Hosting._
-
 ### Install Firemyna & Firebase dependencies
 
-Install Firebase, Firemyna, Express and `@remix-run/express` packages:
+Install Firebase and Firemyna packages:
 
 ```bash
-npm install firemyna express @remix-run/express firebase-functions firebase-admin --save
+npm install firemyna firebase-functions firebase-admin --save
 npm install firebase-tools --save-dev
 ```
 
 ### Adjust the scripts
+
+TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
 
 Replace the Remix commands with Firemyna:
 
@@ -79,13 +56,15 @@ Replace the Remix commands with Firemyna:
  }
 ```
 
+TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+
 ### Init Firemyna
 
 Now, initialize the Firemyna. It will generate the Firemyna config file and
 functions directory with a demo function:
 
 ```bash
-npx firemyna init --preset remix
+npx firemyna init --preset next
 ```
 
 ## Developing
@@ -96,7 +75,7 @@ To start working on the project, run the `dev` script:
 npm run dev
 ```
 
-It will start the Remix project on [localhost:3000](http://localhost:3000/) and Firebase Functions on `localhost:5000` with the demo function running at `http://localhost:5000/FIREBASE_PROJECT_ID/us-central1/hello`.
+It will start the Next.js project on [localhost:3000](http://localhost:3000/) and Firebase Functions on `localhost:5000` with the demo function running at `http://localhost:5000/FIREBASE_PROJECT_ID/us-central1/hello`.
 
 See the logs for more details.
 
@@ -108,7 +87,7 @@ To build the project before deploying to production, run the `build` script:
 npm run build
 ```
 
-It will build the Remix project to `dist/production/hosting` and the functions to `dist/production/functions`.
+It will build the Next.js project to `dist/production/hosting` and the functions to `dist/production/functions`.
 
 ## Previewing the build
 
