@@ -10,14 +10,14 @@ Firemyna speeds ups Firebase applications development by providing a solid found
 
 ⚡️ **Lightning-fast** development server enabled by [esbuild](https://esbuild.github.io/).
 
-🌈 **Universal** - bring your own framework or use built-in presets for Next.js (coming soon), Remix (coming soon) [Astro](./examples/astro#readme), [Create React App](./examples/create-react-app#readme), or [Vite](./examples/vite#readme).
+🌈 **Universal** - bring your own framework or use built-in presets for Next.js (coming soon), [Remix](./examples/remix#readme), [Astro](./examples/astro#readme), [Create React App](./examples/create-react-app#readme), or [Vite](./examples/vite#readme).
 
 ## Get Started
 
 To get started follow framework-specific guides:
 
 - Next.js (coming soon)
-- Remix (coming soon)
+- [Remix](./examples/remix#readme)
 - [Astro](./examples/astro#readme)
 - [Create React App](./examples/create-react-app#readme)
 - [Vite](./examples/vite#readme)

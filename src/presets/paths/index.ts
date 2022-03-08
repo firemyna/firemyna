@@ -30,6 +30,12 @@ export function presetProjectPaths(
         build: "build",
       };
 
+    case "remix":
+      return {
+        src: "app",
+        build: "build",
+      };
+
     case undefined:
       return defaultProjectPaths();
   }

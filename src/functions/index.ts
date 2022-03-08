@@ -8,7 +8,6 @@ import { sweep, uniq } from "js-fns";
 import { parse as parsePath, relative, resolve } from "path";
 import { FiremynaBuildConfig } from "../build";
 import { FiremynaConfig } from "../config";
-import { FiremynaPaths } from "../paths";
 
 /**
  * Firebase Function defenition.
@@ -31,20 +30,23 @@ export async function buildFunctions(
   buildConfig: FiremynaBuildConfig
 ): Promise<FiremynaFunctionsBuild> {
   const fns = await listFunctions(buildConfig);
-  const indexContents = stringifyFunctionsIndex(fns, buildConfig.config);
+  const indexContents = stringifyFunctionsIndex(fns, buildConfig);
   const build: FiremynaFunctionsBuild = {};
 
   await Promise.all(
     fns
       .map(async (fn) => {
         const file = `${fn.name}.js`;
+        const resolvePath = parsePath(
+          relative(buildConfig.cwd, resolve(buildConfig.cwd, fn.path))
+        ).dir;
         build[file] = await buildFile({
           file,
           input: {
             type: "contents",
             contents: await readFile(resolve(buildConfig.cwd, fn.path), "utf8"),
           },
-          resolvePath: parsePath(resolve(buildConfig.cwd, fn.path)).dir,
+          resolvePath,
           bundle: true,
           buildConfig,
         });
@@ -88,18 +90,23 @@ export async function buildFunctions(
  * Generates functions index file string.
  *
  * @param list - the functions list
- * @param config - the Firemyna config
+ * @param buildConfig - the Firemyna build config
  * @returns stringified index file
  */
 export function stringifyFunctionsIndex(
   list: FiremynaFunction[],
-  { functionsInitPath }: FiremynaConfig
+  buildConfig: FiremynaBuildConfig
 ) {
-  return (functionsInitPath ? [`import "./init.js";`] : [])
+  return (buildConfig.config.functionsInitPath ? [`import "./init.js";`] : [])
     .concat(
       list.map(
         (fn) => `export { default as ${fn.name} } from "./${fn.name}.js";`
       )
+    )
+    .concat(
+      buildConfig.renderer
+        ? [`export { default as renderer } from "./renderer";`]
+        : []
     )
     .join("\n");
 }
@@ -123,7 +130,9 @@ const fnRegExp = /^.+\.[tj]sx?$/;
 export async function listFunctions(
   buildConfig: FiremynaBuildConfig
 ): Promise<FiremynaFunction[]> {
-  const dir = await readdir(buildConfig.paths.functions.src);
+  const dir = await readdir(
+    resolve(buildConfig.cwd, buildConfig.paths.functions.src)
+  );
 
   return sweep(
     await Promise.all<FiremynaFunction | undefined>(
@@ -133,7 +142,7 @@ export async function listFunctions(
           buildConfig.paths.functions.src,
           itemPath
         );
-        const path = await findFunctionPath(fullPath);
+        const path = await findFunctionPath(buildConfig.cwd, fullPath);
         if (!path) return;
 
         const { name } = parsePath(itemPath);
@@ -253,20 +262,24 @@ export function includedFunction(
  * Finds the function path, tests if the function is a TS/JS file or a directory
  * with TS/JS index file.
  *
+ * @param cwd - the working directory
  * @param path - the full path to the possible function file or dir
  * @returns the relative path to the function file if found, otherwise undefined
  * @private
  */
-async function findFunctionPath(path: string): Promise<string | undefined> {
+async function findFunctionPath(
+  cwd: string,
+  path: string
+): Promise<string | undefined> {
   const stats = await stat(path);
 
   if (stats.isDirectory()) {
     const files = await readdir(path);
     const indexFile = files.find((file) => indexRegExp.test(file));
     if (!indexFile) return;
-    return relative(process.cwd(), resolve(path, indexFile));
+    return relative(cwd, resolve(path, indexFile));
   } else if (fnRegExp.test(path)) {
-    return relative(process.cwd(), path);
+    return relative(cwd, path);
   }
 }
 
@@ -311,7 +324,7 @@ export function buildFile<Incremental extends boolean | undefined>({
     target: `node${buildConfig.config.node}`,
     sourcemap: "external",
     format: "cjs",
-    outfile: getBuildFunctionsFilePath(buildConfig.paths, file),
+    outfile: getBuildFunctionsFilePath(buildConfig, file),
     entryPoints: input.type === "entry" ? [input.path] : undefined,
     stdin:
       input.type === "contents"
@@ -328,6 +341,7 @@ export function buildFile<Incremental extends boolean | undefined>({
           resolved.includes("node_modules") ? { external: true } : resolved,
       }),
     ],
+    allowOverwrite: true,
     write: false,
     incremental,
   });
@@ -341,6 +355,7 @@ export interface FiremynaPackageJSON {
   };
   dependencies?: { [dependency: string]: string };
   devDependencies?: { [dependency: string]: string };
+  scripts?: Record<string, string>;
 }
 
 export function listDependencies(packageJSON: FiremynaPackageJSON): string[] {
@@ -369,6 +384,9 @@ export function parseDependencies(source: string): string[] {
   return uniq(deps);
 }
 
-export function getBuildFunctionsFilePath(paths: FiremynaPaths, file: string) {
-  return resolve(paths.functions.build, file);
+export function getBuildFunctionsFilePath(
+  buildConfig: FiremynaBuildConfig,
+  file: string
+) {
+  return resolve(buildConfig.cwd, buildConfig.paths.functions.build, file);
 }

@@ -1,7 +1,7 @@
 import { Command } from "@oclif/core";
 import cp from "child_process";
 import { BuildIncremental } from "esbuild";
-import { parse as parsePath } from "path";
+import { parse as parsePath, resolve } from "path";
 import { FiremynaBuildConfig, getBuildConfig } from "../../../build";
 import { prepareBuildStruct } from "../../../build/prepare";
 import { loadConfig, resolveConfig } from "../../../config";
@@ -14,6 +14,8 @@ import {
 } from "../../../functions";
 import { presetProjectPaths } from "../../../presets/paths";
 import { configFlag, cwdFlag } from "../../flags";
+import pc from "picocolors";
+import { Formatter } from "picocolors/types";
 
 export default class Dev extends Command {
   static description = "Starts the Firemyna development server";
@@ -25,7 +27,7 @@ export default class Dev extends Command {
 
   async run() {
     const { flags } = await this.parse(Dev);
-    const cwd = flags.cwd;
+    const cwd = resolve(flags.cwd);
 
     const config = await loadConfig(cwd, flags.config);
     if (!config) throw new Error("Can not find the Firemyna config file");
@@ -38,6 +40,7 @@ export default class Dev extends Command {
       cwd,
       config: resolvedConfig,
       projectPaths,
+      renderer: false,
     });
 
     await prepareBuildStruct(buildConfig);
@@ -52,7 +55,7 @@ export default class Dev extends Command {
     }
 
     async function buildIndex() {
-      const indexContents = stringifyFunctionsIndex(functions, resolvedConfig);
+      const indexContents = stringifyFunctionsIndex(functions, buildConfig);
       const build = await buildFile({
         file: "index.js",
         input: {
@@ -75,10 +78,19 @@ export default class Dev extends Command {
             buildIndex(),
           ]);
 
-          cp.spawn("npx", ["firebase", "serve", "--only", "functions"], {
-            cwd: buildConfig.paths.appEnvBuild,
-            shell: true,
-            stdio: "inherit",
+          const firebaseChild = cp.spawn(
+            "npx",
+            ["firebase", "serve", "--only", "functions"],
+            {
+              cwd: resolve(buildConfig.cwd, buildConfig.paths.appEnvBuild),
+              shell: true,
+            }
+          );
+
+          logChild({
+            child: firebaseChild,
+            formatter: pc.yellow,
+            label: "Firebase",
           });
 
           return;
@@ -106,43 +118,98 @@ export default class Dev extends Command {
 
     switch (config.preset) {
       case "astro": {
-        cp.spawn("npx", ["astro", "dev"], {
+        const astroChild = cp.spawn("npx", ["astro", "dev"], {
+          cwd: buildConfig.cwd,
           shell: true,
-          stdio: "inherit",
         });
+
+        logChild({
+          child: astroChild,
+          formatter: pc.green,
+          label: "Astro",
+        });
+
         break;
       }
 
       case "cra": {
-        cp.spawn("npx", ["react-scripts", "start"], {
+        const craChild = cp.spawn("npx", ["react-scripts", "start"], {
+          cwd: buildConfig.cwd,
           shell: true,
-          stdio: "inherit",
         });
+
+        logChild({
+          child: craChild,
+          formatter: pc.green,
+          label: "Astro",
+        });
+
         break;
       }
 
       case "vite": {
-        cp.spawn("npx", ["vite"], {
+        const viteChild = cp.spawn("npx", ["vite"], {
+          cwd: buildConfig.cwd,
           shell: true,
-          stdio: "inherit",
         });
+
+        logChild({
+          child: viteChild,
+          formatter: pc.green,
+          label: "Vite",
+        });
+
+        break;
+      }
+
+      case "remix": {
+        const remixChild = cp.spawn("npx", ["remix", "dev"], {
+          cwd: buildConfig.cwd,
+          shell: true,
+          env: { ...process.env, NODE_ENV: "development" },
+        });
+
+        logChild({ child: remixChild, formatter: pc.green, label: "Remix" });
+
         break;
       }
     }
   }
 }
 
+interface LogChildProps {
+  label: string;
+  child: cp.ChildProcessWithoutNullStreams;
+  formatter: Formatter;
+}
+
+function logChild({ label, child, formatter }: LogChildProps) {
+  const paddedLabel = label.padStart(8, " ");
+  const formattedLabel = paddedLabel + " | ";
+
+  child.stdout.on("data", (data) => {
+    console.log(pc.dim(formatter(formattedLabel)) + data.toString().trim());
+  });
+
+  child.stderr.on("data", (data) => {
+    console.log(pc.red(formattedLabel) + data.toString().trim());
+  });
+}
+
 async function incrementalBuild(
-  config: FiremynaBuildConfig,
+  buildConfig: FiremynaBuildConfig,
   fn: FiremynaFunction
 ) {
   const file = `${fn.name}.js`;
   return buildFile({
     file,
-    input: { type: "entry", path: fn.path },
-    resolvePath: parsePath(fn.path).dir,
+    input: {
+      type: "entry",
+      path: resolve(buildConfig.cwd, fn.path),
+    },
+    resolvePath: resolve(buildConfig.cwd, parsePath(fn.path).dir),
     bundle: true,
-    buildConfig: config,
+    buildConfig,
     incremental: true,
   });
 }

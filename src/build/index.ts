@@ -1,6 +1,7 @@
 import { FiremynaAppEnv } from "../app";
 import { FiremynaConfigResolved } from "../config";
 import { FiremynaPaths, FiremynaProjectPaths, getPaths } from "../paths";
+import { FiremynaPreset } from "../presets";
 
 /**
  * The build mode:
@@ -23,6 +24,8 @@ export interface FiremynaBuildConfig {
   paths: FiremynaPaths;
   /** The resolved Firemyna config */
   config: FiremynaConfigResolved;
+  /** Should Firemyna generate renderer function? */
+  renderer: boolean;
 }
 
 /**
@@ -39,6 +42,8 @@ export interface GetBuildConfigProps {
   projectPaths: FiremynaProjectPaths;
   /** The resolved Firemyna config */
   config: FiremynaConfigResolved;
+  /** Should Firemyna generate renderer function? */
+  renderer: boolean;
 }
 
 /**
@@ -51,6 +56,7 @@ export function getBuildConfig({
   cwd,
   projectPaths,
   config,
+  renderer,
 }: GetBuildConfigProps): FiremynaBuildConfig {
   return {
     mode,
@@ -58,5 +64,6 @@ export function getBuildConfig({
     cwd,
     config,
     paths: getPaths({ appEnv, cwd, projectPaths: projectPaths }),
+    renderer,
   };
 }

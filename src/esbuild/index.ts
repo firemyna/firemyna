@@ -1,5 +1,5 @@
-import { writeFile } from "fs/promises";
 import { BuildIncremental, BuildResult } from "esbuild";
+import { writeFile } from "fs/promises";
 
 /**
  * Writes all build files to disk.

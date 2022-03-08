@@ -1,8 +1,10 @@
+import { build } from "esbuild";
 import { copyFile, mkdir, readFile, rm, writeFile } from "fs/promises";
 import { resolve } from "path";
 import { FiremynaBuildConfig } from "..";
 import { FiremynaPackageJSON } from "../../functions";
 import { getFunctionsBuildPath } from "../../paths";
+import { presetCommand } from "../../presets";
 
 /**
  * Generates Firebase build structure.
@@ -16,17 +18,15 @@ export interface FiremynaBuildStruct {
  * Prepares the build structure.
  * @returns promise to the operation complete
  */
-export async function prepareBuildStruct({
-  mode,
-  cwd,
-  config,
-  paths,
-}: FiremynaBuildConfig) {
+export async function prepareBuildStruct(buildConfig: FiremynaBuildConfig) {
+  const { mode, cwd, config, paths } = buildConfig;
+
   // Recreate the build directory
   await rm(resolve(cwd, paths.appEnvBuild), {
     recursive: true,
     force: true,
   });
+
   await mkdir(resolve(cwd, getFunctionsBuildPath(paths.appEnvBuild)), {
     recursive: true,
   });
@@ -48,6 +48,9 @@ export async function prepareBuildStruct({
     engines: { node: config.node },
   });
 
+  buildConfig.config.preset &&
+    presetCommand(buildConfig.config.preset, "prepare-package-json")?.(pkg);
+
   await Promise.all<any>([
     writeFile(
       resolve(cwd, paths.appEnvBuild, "package.json"),
@@ -61,7 +64,7 @@ export async function prepareBuildStruct({
 
     writeFile(
       resolve(cwd, paths.appEnvBuild, "firebase.json"),
-      JSON.stringify(firebaseJSON(), null, 2)
+      JSON.stringify(firebaseJSON(buildConfig), null, 2)
     ),
 
     mode === "dev" &&
@@ -72,12 +75,24 @@ export async function prepareBuildStruct({
   return { pkg };
 }
 
+export interface FiremynaFirebaseJSON {
+  hosting: {
+    public: string;
+    rewrites?: Array<{ source: string; function: string }>;
+  };
+  functions: {
+    source: string;
+  };
+}
+
 /**
  * Generates Firebase JSON for functions.
+ *
+ * @param buildConfig - the Firemyna build config
  * @returns Firebase JSON file
  */
-function firebaseJSON() {
-  return {
+function firebaseJSON(buildConfig: FiremynaBuildConfig): FiremynaFirebaseJSON {
+  const json: FiremynaFirebaseJSON = {
     hosting: {
       public: "hosting",
     },
@@ -86,4 +101,15 @@ function firebaseJSON() {
       source: ".",
     },
   };
+
+  if (buildConfig.mode === "build" && buildConfig.renderer) {
+    json.hosting.rewrites = [
+      {
+        source: "/**",
+        function: "renderer",
+      },
+    ];
+  }
+
+  return json;
 }

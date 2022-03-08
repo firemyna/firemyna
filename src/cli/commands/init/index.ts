@@ -16,7 +16,11 @@ import {
   getPaths,
 } from "../../../paths";
 import { presetProjectPaths as presetProjectPaths } from "../../../presets/paths";
-import { firemynaConfigTemplate, httpFunctionTemplate } from "../../../templates";
+import {
+  firemynaConfigTemplate,
+  httpFunctionTemplate,
+} from "../../../templates";
+import { resolve } from "path";
 
 export default class Init extends Command {
   static description = "Init the Firemyna project";
@@ -57,7 +61,10 @@ export default class Init extends Command {
       ),
 
       // Generate the Firemyna config
-      writeFile(configPath, firemynaConfigTemplate(format, { preset, node })),
+      writeFile(
+        resolve(cwd, configPath),
+        firemynaConfigTemplate(format, { preset, node })
+      ),
     ]);
 
     CliUx.ux.action.stop();

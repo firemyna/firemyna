@@ -12,7 +12,7 @@ export const nodeFlag = Flags.enum<FiremynaNode>({
 export const presetFlag = Flags.enum<FiremynaPreset | undefined>({
   description: "Preset to use",
   char: "p",
-  options: ["astro", "cra", "vite"],
+  options: ["astro", "cra", "vite", "remix"],
 });
 
 export const formatFlag = Flags.enum<FiremynaFormat | undefined>({

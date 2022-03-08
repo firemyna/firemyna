@@ -1,6 +1,6 @@
 {
   "name": "firemyna",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Firebase application framework",
   "main": "lib/index.js",
   "bin": {
@@ -37,6 +37,7 @@
   "devDependencies": {
     "@types/estree": "0.0.50",
     "@types/jest": "^27.0.2",
+    "express": "^4.17.3",
     "firebase-admin": "^10.0.0",
     "firebase-functions": "^3.15.7",
     "jest": "^27.3.1",
@@ -59,6 +60,7 @@
     "estree-walker": "^2.0.2",
     "inquirer": "^8.2.0",
     "js-fns": "^2.5.1",
+    "picocolors": "^1.0.0",
     "prettier": "^2.4.1"
   },
   "oclif": {
