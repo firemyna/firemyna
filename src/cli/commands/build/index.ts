@@ -6,13 +6,9 @@ import { promisify } from "util";
 import { getBuildConfig } from "../../../build";
 import { prepareBuildStruct } from "../../../build/prepare";
 import { loadConfig, resolveConfig } from "../../../config";
-import { parseBuildDependencies } from "../../../deps";
+import { listPkgDependencies, parseBuildDependencies } from "../../../deps";
 import { writeEsbuildFile } from "../../../esbuild";
-import {
-  buildFile,
-  buildFunctions,
-  listDependencies,
-} from "../../../functions";
+import { buildFile, buildFunctions } from "../../../functions";
 import { presetProjectPaths } from "../../../presets/paths";
 import { nextRenderer, remixRenderer } from "../../../presets/renderer";
 import { configFlag, cwdFlag } from "../../flags";
@@ -122,7 +118,7 @@ export default class Build extends Command {
     CliUx.ux.action.start("Cleaning npm dependencies");
 
     const buildDeps = await parseBuildDependencies(buildConfig);
-    const pkgDeps = listDependencies(pkg);
+    const pkgDeps = listPkgDependencies(pkg);
     const unusedDeps = remove(difference(pkgDeps, buildDeps), "firebase-admin");
 
     await exec(`npm uninstall --package-lock-only ${unusedDeps.join(" ")}`, {

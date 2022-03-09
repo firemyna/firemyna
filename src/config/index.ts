@@ -31,7 +31,7 @@ export interface FiremynaConfigResolved {
   format?: FiremynaFormat;
   /** The config preset */
   preset?: FiremynaPreset;
-  /** The path (relative to cwd or absolute) to the functions root directory */
+  /** The path (relative to cwd or absolute) to the functions directory */
   functionsPath?: string;
   /** The functions build path */
   buildPath?: string;

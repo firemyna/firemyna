@@ -5,6 +5,7 @@ import glob from "glob";
 import fs from "fs/promises";
 import { FiremynaBuildConfig } from "../build";
 import { resolve as resolvePath } from "path";
+import { FiremynaPkg } from "../pkg";
 
 export function parseBuildDependencies(
   buildConfig: FiremynaBuildConfig
@@ -54,4 +55,10 @@ export function parseSourceDependencies(source: string): string[] {
   });
 
   return uniq(deps);
+}
+
+export function listPkgDependencies(packageJSON: FiremynaPkg): string[] {
+  return Object.keys(packageJSON.dependencies || {}).concat(
+    Object.keys(packageJSON.devDependencies || {})
+  );
 }

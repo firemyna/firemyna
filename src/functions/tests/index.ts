@@ -1,41 +1,73 @@
-import { relative, resolve } from "path";
+import { resolve, relative } from "path";
 import {
   buildFunctions,
   includedFunction,
-  listDependencies,
   listFunctions,
-  parseDependencies,
   parseFunction,
   stringifyFunctionsIndex,
 } from "..";
+import { FiremynaBuildConfig } from "../../build";
 import { FiremynaConfigResolved } from "../../config";
+import { FiremynaPaths } from "../../paths";
 
-describe("Firemyna", () => {
+describe("functions", () => {
   const buildPath = resolve(__dirname, "fixtures/build");
-  const defaultFunctionsPath = resolve(__dirname, "fixtures/basic");
-  const options: FiremynaConfigResolved = {
-    functionsPath: defaultFunctionsPath,
-    buildPath,
+
+  const config: FiremynaConfigResolved = { node: "14" };
+
+  const cwd = resolve(__dirname, "fixtures");
+
+  const paths: FiremynaPaths = {
+    cwd,
+    src: "basic",
+    build: "build",
+    appEnvBuild: "build",
+    functions: {
+      src: "basic",
+      build: "build/functions",
+    },
+    hosting: {
+      build: "build/hosting",
+    },
   };
 
-  let cwd: string;
-  beforeEach(() => {
-    cwd = process.cwd();
-    process.chdir(__dirname);
-  });
+  const buildConfig: FiremynaBuildConfig = {
+    cwd,
+    appEnv: "development",
+    mode: "dev",
+    paths,
+    config,
+    renderer: false,
+  };
 
-  afterEach(() => {
-    process.chdir(cwd);
-  });
+  const mixedBuildConfig: FiremynaBuildConfig = {
+    ...buildConfig,
+    paths: {
+      ...paths,
+      src: "mixed",
+      functions: {
+        src: "mixed",
+        build: "build/functions",
+      },
+    },
+  };
+
+  const randomBuildConfig: FiremynaBuildConfig = {
+    ...buildConfig,
+    paths: {
+      ...paths,
+      src: "random",
+      functions: {
+        src: "random",
+        build: "build/functions",
+      },
+    },
+  };
 
   describe("buildFunctions", () => {
     it("builds function", async () => {
       const functionsPath = resolve(process.cwd(), "fixtures/basic");
-      const result = await buildFunctions({
-        ...options,
-        functionsPath,
-        buildPath,
-      });
+      const result = await buildFunctions(buildConfig);
 
       expect(Object.keys(result).sort()).toEqual([
         "a.js",
@@ -57,8 +89,6 @@ describe("Firemyna", () => {
   });
 
   describe("stringifyFunctionsIndex", () => {
-    const functionsPath = resolve(process.cwd(), "fixtures/mixed");
-
     it("stringifies the list of functions", () => {
       const list = [
         {
@@ -78,11 +108,7 @@ describe("Firemyna", () => {
           path: "fixtures/mixed/d/index.jsx",
         },
       ];
-      const result = stringifyFunctionsIndex(list, {
-        ...options,
-        functionsPath,
-        buildPath,
-      });
+      const result = stringifyFunctionsIndex(list, mixedBuildConfig);
       expect(result).toBe(
         `export { default as a } from "./a.js";
 export { default as b } from "./b.js";
@@ -103,10 +129,11 @@ export { default as d } from "./d.js";`
         },
       ];
       const result = stringifyFunctionsIndex(list, {
-        ...options,
-        functionsPath,
-        buildPath,
-        functionsInitPath: resolve(process.cwd(), "fixtures/init.ts"),
+        ...mixedBuildConfig,
+        config: {
+          ...config,
+          functionsInitPath: resolve(process.cwd(), "fixtures/init.ts"),
+        },
       });
       expect(result).toBe(
         `import "./init.js";
@@ -118,165 +145,123 @@ export { default as b } from "./b.js";`
 
   describe("listFunctions", () => {
     it("lists functions in the given directory", async () => {
-      const functionsPath = resolve(process.cwd(), "fixtures/basic");
-      const list = await listFunctions({
-        ...options,
-        functionsPath,
-        buildPath,
-      });
+      const list = await listFunctions(buildConfig);
       expect(list).toEqual([
         {
           name: "a",
-          path: "fixtures/basic/a.js",
+          path: "basic/a.js",
         },
         {
           name: "b",
-          path: "fixtures/basic/b.jsx",
+          path: "basic/b.jsx",
         },
         {
           name: "c",
-          path: "fixtures/basic/c.ts",
+          path: "basic/c.ts",
         },
         {
           name: "d",
-          path: "fixtures/basic/d.tsx",
-        },
-      ]);
-    });
-
-    it("allows to pass relative path", async () => {
-      const functionsPath = "fixtures/basic";
-      const list = await listFunctions({
-        ...options,
-        functionsPath,
-        buildPath,
-      });
-      expect(list).toEqual([
-        {
-          name: "a",
-          path: "fixtures/basic/a.js",
-        },
-        {
-          name: "b",
-          path: "fixtures/basic/b.jsx",
-        },
-        {
-          name: "c",
-          path: "fixtures/basic/c.ts",
-        },
-        {
-          name: "d",
-          path: "fixtures/basic/d.tsx",
+          path: "basic/d.tsx",
         },
       ]);
     });
 
     it("lists functions in the nested directories", async () => {
-      const functionsPath = resolve(process.cwd(), "fixtures/mixed");
-      const list = await listFunctions({
-        ...options,
-        functionsPath,
-        buildPath,
-      });
+      const list = await listFunctions(mixedBuildConfig);
       expect(list).toEqual([
         {
           name: "a",
-          path: "fixtures/mixed/a.js",
+          path: "mixed/a.js",
         },
         {
           name: "b",
-          path: "fixtures/mixed/b/index.js",
+          path: "mixed/b/index.js",
         },
         {
           name: "c",
-          path: "fixtures/mixed/c.jsx",
+          path: "mixed/c.jsx",
         },
         {
           name: "d",
-          path: "fixtures/mixed/d/index.jsx",
+          path: "mixed/d/index.jsx",
         },
         {
           name: "e",
-          path: "fixtures/mixed/e.ts",
+          path: "mixed/e.ts",
         },
         {
           name: "f",
-          path: "fixtures/mixed/f/index.ts",
+          path: "mixed/f/index.ts",
         },
         {
           name: "g",
-          path: "fixtures/mixed/g.tsx",
+          path: "mixed/g.tsx",
         },
         {
           name: "h",
-          path: "fixtures/mixed/h/index.tsx",
+          path: "mixed/h/index.tsx",
         },
       ]);
     });
 
     it("ignores non-js/ts and non-index files", async () => {
-      const functionsPath = resolve(process.cwd(), "fixtures/random");
-      const list = await listFunctions({
-        ...options,
-        functionsPath,
-        buildPath,
-      });
+      const list = await listFunctions(randomBuildConfig);
       expect(list).toEqual([
         {
           name: "c",
-          path: "fixtures/random/c.ts",
+          path: "random/c.ts",
         },
         {
           name: "d",
-          path: "fixtures/random/d.ts",
+          path: "random/d.ts",
         },
       ]);
     });
 
     it("allows to specify functions ignore regexps", async () => {
-      const functionsPath = resolve(process.cwd(), "fixtures/mixed");
       const list = await listFunctions({
-        ...options,
-        functionsPath,
-        functionsIgnorePaths: [/index\.ts/, /(a|e)\.[jt]s/],
-        buildPath,
+        ...mixedBuildConfig,
+        config: {
+          ...config,
+          functionsIgnorePaths: [/index\.ts/, /(a|e)\.[jt]s/],
+        },
       });
       expect(list).toEqual([
         {
           name: "b",
-          path: "fixtures/mixed/b/index.js",
+          path: "mixed/b/index.js",
         },
         {
           name: "c",
-          path: "fixtures/mixed/c.jsx",
+          path: "mixed/c.jsx",
         },
         {
           name: "d",
-          path: "fixtures/mixed/d/index.jsx",
+          path: "mixed/d/index.jsx",
         },
         {
           name: "g",
-          path: "fixtures/mixed/g.tsx",
+          path: "mixed/g.tsx",
         },
       ]);
     });
 
     it("allows to specify the functions to build", async () => {
-      const functionsPath = resolve(process.cwd(), "fixtures/basic");
       const list = await listFunctions({
-        ...options,
-        functionsPath,
-        onlyFunctions: ["a", "c"],
-        buildPath,
+        ...buildConfig,
+        config: {
+          ...config,
+          onlyFunctions: ["a", "c"],
+        },
       });
       expect(list).toEqual([
         {
           name: "a",
-          path: "fixtures/basic/a.js",
+          path: "basic/a.js",
         },
         {
           name: "c",
-          path: "fixtures/basic/c.ts",
+          path: "basic/c.ts",
         },
       ]);
     });
@@ -284,16 +269,16 @@ export { default as b } from "./b.js";`
 
   describe("parseFunction", () => {
     it("returns the function definition if the path is a function", () => {
-      const path = resolve(defaultFunctionsPath, "hello.ts");
-      expect(parseFunction(options, path)).toEqual({
+      const path = resolve(cwd, "basic/hello.ts");
+      expect(parseFunction(buildConfig, path)).toEqual({
         name: "hello",
         path: relative(process.cwd(), path),
       });
     });
 
     it("returns the function definition if the path is a function directory", () => {
-      const path = resolve(defaultFunctionsPath, "hello/index.js");
-      expect(parseFunction(options, path)).toEqual({
+      const path = resolve(cwd, "basic/hello/index.js");
+      expect(parseFunction(buildConfig, path)).toEqual({
         name: "hello",
         path: relative(process.cwd(), path),
       });
@@ -301,78 +286,81 @@ export { default as b } from "./b.js";`
 
     it("ignores nesting more than one", () => {
       expect(
-        parseFunction(
-          options,
-          resolve(defaultFunctionsPath, "hello/world/index.js")
-        )
+        parseFunction(buildConfig, resolve(cwd, "basic/hello/world/index.js"))
       ).not.toBeDefined();
 
       expect(
         parseFunction(
-          options,
-          resolve(defaultFunctionsPath, "hello/index/world/index.js")
+          buildConfig,
+          resolve(cwd, "basic/hello/index/world/index.js")
         )
       ).not.toBeDefined();
     });
 
     it("detects js/jsx/ts/tsx files", () => {
       expect(
-        parseFunction(options, resolve(defaultFunctionsPath, "hello.js"))
+        parseFunction(buildConfig, resolve(cwd, "basic/hello.js"))
       ).toBeDefined();
 
       expect(
-        parseFunction(options, resolve(defaultFunctionsPath, "hello/index.js"))
+        parseFunction(buildConfig, resolve(cwd, "basic/hello/index.js"))
       ).toBeDefined();
 
       expect(
-        parseFunction(options, resolve(defaultFunctionsPath, "hello.jsx"))
+        parseFunction(buildConfig, resolve(cwd, "basic/hello.jsx"))
       ).toBeDefined();
 
       expect(
-        parseFunction(options, resolve(defaultFunctionsPath, "hello/index.jsx"))
+        parseFunction(buildConfig, resolve(cwd, "basic/hello/index.jsx"))
       ).toBeDefined();
 
       expect(
-        parseFunction(options, resolve(defaultFunctionsPath, "hello.ts"))
+        parseFunction(buildConfig, resolve(cwd, "basic/hello.ts"))
       ).toBeDefined();
 
       expect(
-        parseFunction(options, resolve(defaultFunctionsPath, "hello/index.ts"))
+        parseFunction(buildConfig, resolve(cwd, "basic/hello/index.ts"))
       ).toBeDefined();
 
       expect(
-        parseFunction(options, resolve(defaultFunctionsPath, "hello.tsx"))
+        parseFunction(buildConfig, resolve(cwd, "basic/hello.tsx"))
       ).toBeDefined();
 
       expect(
-        parseFunction(options, resolve(defaultFunctionsPath, "hello/index.tsx"))
+        parseFunction(buildConfig, resolve(cwd, "basic/hello/index.tsx"))
       ).toBeDefined();
 
       expect(
-        parseFunction(options, resolve(defaultFunctionsPath, "hello.rb"))
+        parseFunction(buildConfig, resolve(cwd, "basic/hello.rb"))
       ).not.toBeDefined();
 
       expect(
-        parseFunction(options, resolve(defaultFunctionsPath, "hello.t"))
+        parseFunction(buildConfig, resolve(cwd, "basic/hello.t"))
       ).not.toBeDefined();
     });
   });
 
   describe("includedFunction", () => {
     it("returns true unless the function is ignored", () => {
-      const testOptions = { ...options, functionsIgnorePaths: [/world/] };
+      const testBuildConfig = {
+        ...buildConfig,
+        config: {
+          ...config,
+          functionsIgnorePaths: [/world/],
+        },
+      };
 
-      const pathA = resolve(defaultFunctionsPath, "hello/index.js");
+      const pathA = resolve(cwd, "basic/hello/index.js");
       expect(
-        includedFunction(testOptions, {
+        includedFunction(testBuildConfig, {
           name: "hello",
           path: relative(process.cwd(), pathA),
         })
       ).toBe(true);
 
-      const pathB = resolve(defaultFunctionsPath, "world/index.js");
+      const pathB = resolve(cwd, "basic/world/index.js");
       expect(
-        includedFunction(testOptions, {
+        includedFunction(testBuildConfig, {
           name: "world",
           path: relative(process.cwd(), pathB),
         })
@@ -380,61 +368,38 @@ export { default as b } from "./b.js";`
     });
 
     it("returns false when only list is present and the function is not listed", () => {
-      const testOptions = {
-        ...options,
-        functionsIgnorePaths: [/world/],
-        onlyFunctions: ["cruel"],
+      const testBuildConfig = {
+        ...buildConfig,
+        config: {
+          ...config,
+          functionsIgnorePaths: [/world/],
+          onlyFunctions: ["cruel"],
+        },
       };
 
-      const pathA = resolve(defaultFunctionsPath, "hello/index.js");
+      const pathA = resolve(cwd, "basic/hello/index.js");
       expect(
-        includedFunction(testOptions, {
+        includedFunction(testBuildConfig, {
           name: "hello",
           path: relative(process.cwd(), pathA),
         })
       ).toBe(false);
 
-      const pathB = resolve(defaultFunctionsPath, "cruel/index.js");
+      const pathB = resolve(cwd, "basic/cruel/index.js");
       expect(
-        includedFunction(testOptions, {
+        includedFunction(testBuildConfig, {
           name: "cruel",
           path: relative(process.cwd(), pathB),
         })
       ).toBe(true);
 
-      const pathC = resolve(defaultFunctionsPath, "world/index.js");
+      const pathC = resolve(cwd, "basic/world/index.js");
       expect(
-        includedFunction(testOptions, {
+        includedFunction(testBuildConfig, {
           name: "world",
           path: relative(process.cwd(), pathC),
         })
       ).toBe(false);
-    });
-  });
-
-  describe("listDependencies", () => {
-    it("extracts dependencies from the package.json object", () => {
-      const result = listDependencies({
-        dependencies: {
-          firemyna: "1.0.0",
-          "firebase-functions": "2.0.0",
-          "firebase-admin": "3.0.0",
-        },
-        devDependencies: {
-          "firebase-tools": "4.0.0",
-        },
-      });
-      expect(result).toEqual([
-        "firemyna",
-        "firebase-functions",
-        "firebase-admin",
-        "firebase-tools",
-      ]);
-    });
-
-    it("works when dependencies are not specified", () => {
-      const result = listDependencies({});
-      expect(result).toEqual([]);
     });
   });
 });
