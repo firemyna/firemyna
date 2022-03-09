@@ -1,20 +1,18 @@
 import { CliUx, Command } from "@oclif/core";
 import cp from "child_process";
-import { difference, flatten, remove, uniq } from "js-fns";
-import { parse as parsePath, resolve } from "path";
+import { difference, remove } from "js-fns";
+import { resolve } from "path";
 import { promisify } from "util";
-import { preset } from "../../../../jest.config";
 import { getBuildConfig } from "../../../build";
 import { prepareBuildStruct } from "../../../build/prepare";
 import { loadConfig, resolveConfig } from "../../../config";
+import { parseBuildDependencies } from "../../../deps";
 import { writeEsbuildFile } from "../../../esbuild";
 import {
   buildFile,
   buildFunctions,
   listDependencies,
-  parseDependencies,
 } from "../../../functions";
-import { presetCommand } from "../../../presets";
 import { presetProjectPaths } from "../../../presets/paths";
 import { nextRenderer, remixRenderer } from "../../../presets/renderer";
 import { configFlag, cwdFlag } from "../../flags";
@@ -57,102 +55,81 @@ export default class Build extends Command {
 
       prepareBuildStruct(buildConfig),
 
-      config.preset === "remix" &&
-        (await exec("npx remix build", {
-          cwd: buildConfig.cwd,
-          env: { ...process.env, NODE_ENV: "production" },
-        }).then(async () => {
-          const build = await buildFile({
-            file: "renderer.js",
-            input: {
-              type: "contents",
-              contents: remixRenderer(),
-            },
-            resolvePath: resolve(
-              buildConfig.cwd,
-              buildConfig.paths.functions.build
-            ),
-            buildConfig,
-          });
+      config.preset === "remix"
+        ? await exec("npx remix build", {
+            cwd: buildConfig.cwd,
+            env: { ...process.env, NODE_ENV: "production" },
+          }).then(async () => {
+            const build = await buildFile({
+              file: "renderer.js",
+              input: {
+                type: "contents",
+                contents: remixRenderer(),
+              },
+              resolvePath: resolve(
+                buildConfig.cwd,
+                buildConfig.paths.functions.build
+              ),
+              buildConfig,
+            });
 
-          await writeEsbuildFile(build);
+            await writeEsbuildFile(build);
 
-          await exec(
-            `rsync --recursive --prune-empty-dirs --exclude=build/* public/* ${buildConfig.paths.hosting.build}`,
-            { cwd: resolve(buildConfig.cwd) }
-          );
+            await exec(
+              `rsync --recursive --prune-empty-dirs --exclude=build/* public/* ${buildConfig.paths.hosting.build}`,
+              { cwd: resolve(buildConfig.cwd) }
+            );
 
-          return build;
-        })),
+            return build;
+          })
+        : config.preset === "next"
+        ? await exec("npx next build", {
+            cwd: buildConfig.cwd,
+            env: { ...process.env, NODE_ENV: "production" },
+          }).then(async () => {
+            const build = await buildFile({
+              file: "renderer.js",
+              input: {
+                type: "contents",
+                contents: nextRenderer(),
+              },
+              resolvePath: resolve(
+                buildConfig.cwd,
+                buildConfig.paths.functions.build
+              ),
+              buildConfig,
+            });
 
-      config.preset === "next" &&
-        (await exec("npx next build", {
-          cwd: buildConfig.cwd,
-          env: { ...process.env, NODE_ENV: "production" },
-        }).then(async () => {
-          const build = await buildFile({
-            file: "renderer.js",
-            input: {
-              type: "contents",
-              contents: nextRenderer(),
-            },
-            resolvePath: resolve(
-              buildConfig.cwd,
-              buildConfig.paths.functions.build
-            ),
-            buildConfig,
-          });
+            await writeEsbuildFile(build);
 
-          await writeEsbuildFile(build);
+            await exec(
+              `rsync --recursive --prune-empty-dirs public/* ${buildConfig.paths.hosting.build}`,
+              { cwd: resolve(buildConfig.cwd) }
+            );
 
-          await exec(
-            `rsync --recursive --prune-empty-dirs public/* ${buildConfig.paths.hosting.build}`,
-            { cwd: resolve(buildConfig.cwd) }
-          );
+            await exec(
+              `rsync --recursive .next ${buildConfig.paths.functions.build}`,
+              { cwd: resolve(buildConfig.cwd) }
+            );
 
-          await exec(
-            `rsync --recursive .next ${buildConfig.paths.functions.build}`,
-            { cwd: resolve(buildConfig.cwd) }
-          );
-
-          return build;
-        })),
+            return build;
+          })
+        : undefined,
     ]);
 
     CliUx.ux.action.stop();
 
-    if (config.preset !== "next") {
-      CliUx.ux.action.start("Cleaning npm dependencies");
+    CliUx.ux.action.start("Cleaning npm dependencies");
 
-      const sourceDeps = uniq(
-        flatten(
-          Object.values(functions)
-            .concat(rendererResult || [])
-            .map((f) =>
-              parseDependencies(
-                f.outputFiles?.find(
-                  (output) => parsePath(output.path).ext === ".js"
-                )?.text || ""
-              )
-            )
-        )
-      ).concat(
-        (config.preset &&
-          (await presetCommand(
-            config.preset,
-            "list-source-dependencies"
-          )?.(buildConfig))) ||
-          []
-      );
-      const deps = listDependencies(pkg);
-      const unusedDeps = remove(difference(deps, sourceDeps), "firebase-admin");
+    const buildDeps = await parseBuildDependencies(buildConfig);
+    const pkgDeps = listDependencies(pkg);
+    const unusedDeps = remove(difference(pkgDeps, buildDeps), "firebase-admin");
 
-      await exec(`npm uninstall --package-lock-only ${unusedDeps.join(" ")}`, {
-        cwd: resolve(buildConfig.cwd, buildConfig.paths.appEnvBuild),
-      });
+    await exec(`npm uninstall --package-lock-only ${unusedDeps.join(" ")}`, {
+      cwd: resolve(buildConfig.cwd, buildConfig.paths.appEnvBuild),
+    });
 
-      CliUx.ux.action.stop();
-    }
+    CliUx.ux.action.stop();
 
     switch (config.preset) {
       case "astro": {

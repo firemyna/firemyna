@@ -1,13 +1,10 @@
 import NodeResolve from "@esbuild-plugins/node-resolve";
-import { parse as parseSource } from "acorn";
 import chokidar from "chokidar";
 import { build, BuildIncremental, BuildResult, OutputFile } from "esbuild";
-import { walk } from "estree-walker";
 import { readdir, readFile, stat } from "fs/promises";
-import { sweep, uniq } from "js-fns";
+import { sweep } from "js-fns";
 import { parse as parsePath, relative, resolve } from "path";
 import { FiremynaBuildConfig } from "../build";
-import { FiremynaConfig } from "../config";
 
 /**
  * Firebase Function defenition.
@@ -362,26 +359,6 @@ export function listDependencies(packageJSON: FiremynaPackageJSON): string[] {
   return Object.keys(packageJSON.dependencies || {}).concat(
     Object.keys(packageJSON.devDependencies || {})
   );
-}
-
-export function parseDependencies(source: string): string[] {
-  const ast = parseSource(source, { ecmaVersion: "latest" });
-  const deps: string[] = [];
-
-  walk(ast, {
-    enter(node) {
-      // @ts-ignore
-      if (node.type === "CallExpression" && node.callee.name === "require") {
-        // @ts-ignore
-        const depPath = node.arguments[0].value;
-        const isLocal = /\.\/.+/.test(depPath);
-        const captures = depPath.match(/^((?:@[^\/]+\/)?([^\/]+))/);
-        if (!isLocal && depPath) deps.push(captures[1]);
-      }
-    },
-  });
-
-  return uniq(deps);
 }
 
 export function getBuildFunctionsFilePath(

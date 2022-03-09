@@ -36,27 +36,24 @@ npm install firebase-tools --save-dev
 
 ### Adjust the scripts
 
-TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-
-Replace the Remix commands with Firemyna:
+Replace the Next.js commands with Firemyna:
 
 ```diff
 --- a/package.json
 +++ b/package.json
-@@ -29,8 +29,7 @@
-   "sideEffects": false,
+@@ -3,9 +3,8 @@
+   "version": "0.1.0",
+   "private": true,
    "scripts": {
-     "postinstall": "remix setup node",
--    "build": "cross-env NODE_ENV=production remix build",
--    "dev": "cross-env NODE_ENV=development remix dev",
--    "start": "cross-env NODE_ENV=production remix-serve build"
+-    "dev": "next dev",
+-    "build": "next build",
+-    "start": "next start",
++    "dev": "firemyna dev",
 +    "build": "firemyna build",
-+    "dev": "firemyna dev"
-   }
- }
+     "lint": "next lint"
+   },
+   "dependencies": {
 ```
-
-TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
 
 ### Init Firemyna
 

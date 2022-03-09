@@ -1,4 +1,3 @@
-import { FiremynaBuildConfig } from "../build";
 import { FiremynaPackageJSON } from "../functions";
 import { remixPresetCommands } from "./remix";
 
@@ -9,10 +8,6 @@ export type FiremynaPreset = "astro" | "cra" | "vite" | "remix" | "next";
 
 export type FiremynaPresetCommands = {
   "prepare-package-json"?: (pkg: FiremynaPackageJSON) => void;
-
-  "list-source-dependencies"?: (
-    buildConfig: FiremynaBuildConfig
-  ) => Promise<string[]>;
 };
 
 export type FiremynaPresetCommand = keyof FiremynaPresetCommands;
