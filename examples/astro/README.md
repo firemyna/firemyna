@@ -34,15 +34,12 @@ Now, we need to adjust the Astro configuration and set `./dist/production/hostin
 ```diff
 --- a/astro.config.mjs
 +++ b/astro.config.mjs
-@@ -1,7 +1,7 @@
- export default {
-   // projectRoot: '.',     // Where to resolve all URLs relative to. Useful if you have a monorepo project.
-   // pages: './src/pages', // Path to Astro components, pages, and data
--  // dist: './dist',       // When running `astro build`, path to final static output
+@@ -1,3 +1,5 @@
+ // https://astro.build/config
+-export default defineConfig({});
++export default defineConfig({
 +  dist: './dist/production/hosting',
-   // public: './public',   // A folder of static files Astro will copy to the root. Useful for favicons, images, and other files that don’t need processing.
-   buildOptions: {
-     // site: 'http://example.com',           // Your public domain, e.g.: https://my-site.dev/. Used to generate sitemaps and canonical URLs.
++});
 ```
 
 > _This change separates the development and production environments and distinguishes Astro's static assets that we'll deploy to Firebase Hosting._
