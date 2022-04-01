@@ -1,9 +1,8 @@
-import { build } from "esbuild";
 import { copyFile, mkdir, readFile, rm, writeFile } from "fs/promises";
 import { resolve } from "path";
 import { FiremynaBuildConfig } from "..";
-import { FiremynaPackageJSON } from "../../functions";
 import { getFunctionsBuildPath } from "../../paths";
+import { FiremynaPkg } from "../../pkg";
 import { presetCommand } from "../../presets";
 
 /**
@@ -11,7 +10,7 @@ import { presetCommand } from "../../presets";
  */
 export interface FiremynaBuildStruct {
   /** The parsed package.json */
-  pkg: FiremynaPackageJSON;
+  pkg: FiremynaPkg;
 }
 
 /**
@@ -38,7 +37,7 @@ export async function prepareBuildStruct(buildConfig: FiremynaBuildConfig) {
     );
   }
 
-  const pkg: FiremynaPackageJSON = JSON.parse(
+  const pkg: FiremynaPkg = JSON.parse(
     await readFile(resolve(cwd, "package.json"), "utf8")
   );
 
@@ -102,7 +101,7 @@ function firebaseJSON(buildConfig: FiremynaBuildConfig): FiremynaFirebaseJSON {
     },
   };
 
-  if (buildConfig.mode === "build" && buildConfig.renderer) {
+  if (buildConfig.renderer) {
     json.hosting.rewrites = [
       {
         source: "/**",

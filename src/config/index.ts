@@ -1,4 +1,8 @@
 import { transform } from "esbuild";
+import type {
+  SUPPORTED_REGIONS,
+  VALID_MEMORY_OPTIONS,
+} from "firebase-functions";
 import { readFile, rm, writeFile } from "fs/promises";
 import { isAbsolute, parse, relative, resolve } from "path";
 import { FiremynaPreset } from "../presets";
@@ -7,7 +11,7 @@ import { getConfigFileName } from "./paths";
 /**
  * The Firebase Functions Node.js version.
  */
-export type FiremynaNode = "10" | "14" | "14" | "14" | "16";
+export type FiremynaFunctionsNode = "10" | "14" | "14" | "14" | "16";
 
 /**
  * The default Node.js version.
@@ -19,6 +23,11 @@ export const defaultNode = "14";
  */
 export type FiremynaFormat = "ts" | "js";
 
+/**
+ * The default code format
+ */
+export const defaultFormat = "js";
+
 export type FiremynaConfig = Partial<FiremynaConfigResolved>;
 
 /**
@@ -26,9 +35,9 @@ export type FiremynaConfig = Partial<FiremynaConfigResolved>;
  */
 export interface FiremynaConfigResolved {
   /** The Functions Node.js version; default - {@link defaultNode} */
-  node: FiremynaNode;
+  node: FiremynaFunctionsNode;
   /** The source code format; the default format is js */
-  format?: FiremynaFormat;
+  format: FiremynaFormat;
   /** The config preset */
   preset?: FiremynaPreset;
   /** The path (relative to cwd or absolute) to the functions directory */
@@ -42,7 +51,7 @@ export interface FiremynaConfigResolved {
   /** The init module path (relative to cwd or absolute) */
   functionsInitPath?: string;
   /** The Functions runtime version */
-  functionsRuntime?: FiremynaNode;
+  functionsRuntime?: FiremynaFunctionsNode;
   /** The Functions runtime config path */
   functionsRuntimeConfigPath?: string;
 }
@@ -154,5 +163,6 @@ export function resolveConfig(config: FiremynaConfig): FiremynaConfigResolved {
   return {
     ...config,
     node: config.node || defaultNode,
+    format: config.format || defaultFormat,
   };
 }

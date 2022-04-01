@@ -1,8 +1,18 @@
 import { Flags } from "@oclif/core";
-import { defaultNode, FiremynaFormat, FiremynaNode } from "../../config";
+import {
+  defaultNode,
+  FiremynaFormat,
+  FiremynaFunctionsNode,
+} from "../../config";
+import {
+  FirebaseMemoryOption,
+  firebaseMemoryOptions,
+  FirebaseRegion,
+  firebaseRegions,
+} from "../../firebase/exports";
 import { FiremynaPreset } from "../../presets";
 
-export const nodeFlag = Flags.enum<FiremynaNode>({
+export const nodeFlag = Flags.enum<FiremynaFunctionsNode>({
   description: "The Node.js version to use",
   char: "n",
   options: ["10", "14", "16"],
@@ -28,4 +38,15 @@ export const cwdFlag = Flags.string({
 
 export const configFlag = Flags.string({
   description: "Path to the Firemyna config",
+});
+
+export const memoryFlag = Flags.enum<FirebaseMemoryOption>({
+  description: "The Firebase Functions memory",
+  options: firebaseMemoryOptions,
+});
+
+export const regionFlag = Flags.enum<FirebaseRegion | FirebaseRegion[]>({
+  description: "The Firebase Functions region or regions",
+  multiple: true,
+  options: firebaseRegions,
 });

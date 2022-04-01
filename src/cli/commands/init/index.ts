@@ -1,5 +1,13 @@
 import { CliUx, Command } from "@oclif/core";
 import { writeFile } from "fs/promises";
+import { resolve } from "path";
+import { getConfigFileName } from "../../../config/paths";
+import { ensurePath, getFunctionSourcePath, getPaths } from "../../../paths";
+import { presetProjectPaths as presetProjectPaths } from "../../../presets/paths";
+import {
+  firemynaConfigTemplate,
+  httpFunctionTemplate,
+} from "../../../templates";
 import {
   configFlag,
   cwdFlag,
@@ -8,19 +16,6 @@ import {
   presetFlag,
 } from "../../flags";
 import { promptFormat } from "../../prompts";
-import { getConfigFileName } from "../../../config/paths";
-import {
-  defaultProjectPaths,
-  ensurePath,
-  getFunctionSourcePath,
-  getPaths,
-} from "../../../paths";
-import { presetProjectPaths as presetProjectPaths } from "../../../presets/paths";
-import {
-  firemynaConfigTemplate,
-  httpFunctionTemplate,
-} from "../../../templates";
-import { resolve } from "path";
 
 export default class Init extends Command {
   static description = "Init the Firemyna project";
@@ -57,13 +52,13 @@ export default class Init extends Command {
       // Generate demo function
       writeFile(
         getFunctionSourcePath({ name: "hello", format, paths }),
-        httpFunctionTemplate(format)
+        httpFunctionTemplate({ name: "hello", format })
       ),
 
       // Generate the Firemyna config
       writeFile(
         resolve(cwd, configPath),
-        firemynaConfigTemplate(format, { preset, node })
+        firemynaConfigTemplate({ preset, format, node })
       ),
     ]);
 
