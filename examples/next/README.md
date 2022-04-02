@@ -30,8 +30,8 @@ You'll need to add `.firebaserc` with your Firebase project id:
 Install Firebase and Firemyna packages:
 
 ```bash
-npm install firemyna firebase-functions firebase-admin --save
-npm install firebase-tools --save-dev
+npm install firebase-functions firebase-admin --save
+npm install firebase-tools firemyna --save-dev
 ```
 
 ### Adjust the scripts

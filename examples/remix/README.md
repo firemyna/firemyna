@@ -55,8 +55,8 @@ Now, we need to adjust the Remix configuration and set [`assetsBuildDirectory`](
 Install Firebase, Firemyna, Express and `@remix-run/express` packages:
 
 ```bash
-npm install firemyna express @remix-run/express firebase-functions firebase-admin --save
-npm install firebase-tools --save-dev
+npm install firebase-functions firebase-admin @remix-run/express express --save
+npm install firebase-tools firemyna --save-dev
 ```
 
 ### Adjust the scripts

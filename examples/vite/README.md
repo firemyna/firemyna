@@ -53,8 +53,8 @@ Now, we need to adjust the Vite configuration and set `./dist/production/hosting
 Install Firemyna package:
 
 ```bash
-npm install firemyna firebase-functions firebase-admin --save
-npm install firebase-tools --save-dev
+npm install firebase-functions firebase-admin --save
+npm install firebase-tools firemyna --save-dev
 ```
 
 ### Adjust the scripts
