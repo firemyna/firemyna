@@ -1,8 +1,4 @@
 import { transform } from "esbuild";
-import type {
-  SUPPORTED_REGIONS,
-  VALID_MEMORY_OPTIONS,
-} from "firebase-functions";
 import { readFile, rm, writeFile } from "fs/promises";
 import { isAbsolute, parse, relative, resolve } from "path";
 import { FiremynaPreset } from "../presets";
@@ -16,7 +12,7 @@ export type FiremynaFunctionsNode = "10" | "14" | "14" | "14" | "16";
 /**
  * The default Node.js version.
  */
-export const defaultNode = "14";
+export const defaultNode = "16";
 
 /**
  * The source code format.
