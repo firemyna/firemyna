@@ -1,6 +1,6 @@
 {
   "name": "firemyna",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "Firebase application framework",
   "main": "lib/index.js",
   "bin": {
@@ -42,6 +42,7 @@
     "firebase-admin": "^10.0.0",
     "firebase-functions": "^3.15.7",
     "jest": "^27.3.1",
+    "oclif": "^2.6.3",
     "ts-jest": "^27.0.7",
     "ts-node": "^10.4.0",
     "tsm": "^2.1.2",
@@ -66,7 +67,7 @@
     "prettier": "^2.4.1"
   },
   "oclif": {
-    "commands": "./src/cli/commands",
+    "commands": "./lib/cli/commands",
     "bin": "firemyna",
     "plugins": [
       "@oclif/plugin-help",
