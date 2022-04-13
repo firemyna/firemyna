@@ -127,9 +127,11 @@ export default class Build extends Command {
 
     CliUx.ux.action.stop();
 
+    let p: cp.ChildProcess;
+
     switch (config.preset) {
       case "astro": {
-        cp.spawn("npx", ["astro", "build"], {
+        p = cp.spawn("npx", ["astro", "build"], {
           cwd: buildConfig.cwd,
           shell: true,
           stdio: "inherit",
@@ -138,7 +140,7 @@ export default class Build extends Command {
       }
 
       case "cra": {
-        cp.spawn("npx", ["react-scripts", "build"], {
+        p = cp.spawn("npx", ["react-scripts", "build"], {
           cwd: buildConfig.cwd,
           shell: true,
           stdio: "inherit",
@@ -151,7 +153,7 @@ export default class Build extends Command {
       }
 
       case "vite": {
-        cp.spawn("npx", ["vite", "build"], {
+        p = cp.spawn("npx", ["vite", "build"], {
           cwd: buildConfig.cwd,
           shell: true,
           stdio: "inherit",
@@ -159,5 +161,7 @@ export default class Build extends Command {
         break;
       }
     }
+
+    await new Promise((resolve) => p.on("close", resolve));
   }
 }
