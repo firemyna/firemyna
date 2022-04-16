@@ -1,13 +1,19 @@
 import { CliUx, Command } from "@oclif/core";
-import { getBuildConfig } from "../../../../build";
-import { loadConfig, resolveConfig } from "../../../../config";
-import { presetProjectPaths as presetProjectPaths } from "../../../../presets/paths";
-import { configFlag, cwdFlag, memoryFlag, regionFlag } from "../../../flags";
 import { writeFile } from "fs/promises";
-import { getFunctionSourcePath, getPaths } from "../../../../paths";
-import { httpFunctionTemplate } from "../../../../templates";
 import { relative } from "path";
 import { cyan, underline } from "picocolors";
+import { loadConfig, resolveConfig } from "../../../../config";
+import { getFunctionSourcePath, getPaths } from "../../../../paths";
+import { presetProjectPaths } from "../../../../presets/paths";
+import { httpFunctionTemplate } from "../../../../templates";
+import {
+  configFlag,
+  cookieFlag,
+  corsFlag,
+  cwdFlag,
+  memoryFlag,
+  regionFlag,
+} from "../../../flags";
 
 export default class GenerateHTTP extends Command {
   static aliases = ["g:http"];
@@ -27,6 +33,8 @@ export default class GenerateHTTP extends Command {
     config: configFlag,
     memory: memoryFlag,
     region: regionFlag,
+    cookie: cookieFlag,
+    cors: corsFlag,
   };
 
   async run() {
@@ -60,6 +68,8 @@ export default class GenerateHTTP extends Command {
         format,
         memory: flags.memory,
         region: flags.region,
+        cookie: flags.cookie,
+        cors: flags.cors,
       })
     );
 

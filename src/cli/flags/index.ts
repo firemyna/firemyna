@@ -50,3 +50,11 @@ export const regionFlag = Flags.enum<FirebaseRegion | FirebaseRegion[]>({
   multiple: true,
   options: firebaseRegions,
 });
+
+export const cookieFlag = Flags.boolean({
+  description: "Enable cookie parsing middleware",
+});
+
+export const corsFlag = Flags.boolean({
+  description: "Enable CORS middleware",
+});

@@ -13,6 +13,10 @@ export interface HTTPFunctionTemplateProps extends RuntimeOptions {
   format: FiremynaFormat;
   /** The Function region */
   region?: FirebaseRegion | FirebaseRegion[];
+  /** Enable cookie middleware */
+  cookie?: boolean;
+  /** Enable CORS middleware */
+  cors?: boolean;
 }
 
 /**
@@ -24,6 +28,8 @@ export function httpFunctionTemplate({
   name,
   format,
   region,
+  cookie,
+  cors,
   ...runtime
 }: HTTPFunctionTemplateProps): string {
   const regionCode = region
@@ -37,16 +43,64 @@ export function httpFunctionTemplate({
   const runtimeJSON = JSON.stringify(runtime);
   const runtimeCode = runtimeJSON !== "{}" ? `.runWith(${runtimeJSON})` : "";
 
-  return formatSource(
-    `${importFunctions(format)}
+  const middlewares: HTTPFunctionMiddleware[] = [];
 
-export default functions${regionCode}${runtimeCode}.https.onRequest((request, response) => {
+  if (cookie) middlewares.push(httpCookieMiddleware);
+  if (cors) middlewares.push(httpCORSMiddleware);
+
+  const imports = [importFunctions(format)]
+    .concat(middlewares.map((middleware) => middleware.import))
+    .join("\n");
+
+  const inits = middlewares.map((middleware) => middleware.init).join("\n");
+
+  const body = middlewares.reverse().reduce(
+    (acc, middleware) => `${middleware.name}(request, response, () => ${acc})`,
+    `{
   response.send("Hi from ${name}!");
-});
+}`
+  );
+
+  return formatSource(
+    `${imports}
+
+${inits}
+
+export default functions${regionCode}${runtimeCode}.https.onRequest((request, response) => ${body});
 `,
     { parser: "babel" }
   );
 }
+
+/**
+ * HTTP function middleware defition.
+ */
+interface HTTPFunctionMiddleware {
+  /** The middleware import */
+  import: string;
+  /** The middleware init */
+  init: string;
+  /** The middleware name */
+  name: string;
+}
+
+/**
+ * The CORS middleware.
+ */
+var httpCORSMiddleware: HTTPFunctionMiddleware = {
+  import: 'import cors from "cors";',
+  init: "const corsMiddleware = cors({ origin: true });",
+  name: "corsMiddleware",
+};
+
+/**
+ * The cookie middleware.
+ */
+var httpCookieMiddleware: HTTPFunctionMiddleware = {
+  import: 'import cookieParser from "cookie-parser";',
+  init: "const cookieMiddleware = cookieParser();",
+  name: "cookieMiddleware",
+};
 
 /**
  * Generates Firemyna config file source code.
