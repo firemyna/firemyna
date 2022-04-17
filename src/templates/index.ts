@@ -4,15 +4,27 @@ import { FiremynaConfigResolved, FiremynaFormat } from "../config";
 import { FirebaseRegion } from "../firebase/exports";
 
 /**
- * The {@link httpFunctionTemplate} function props.
+ * The functions init data.
  */
-export interface HTTPFunctionTemplateProps extends RuntimeOptions {
+export interface FunctionsInitData extends RuntimeOptions {
+  /** The Function region */
+  region?: FirebaseRegion | FirebaseRegion[];
+}
+
+/**
+ * Base function template props.
+ */
+export interface BaseFunctionTemplateProps extends FunctionsInitData {
   /** The function name */
   name: string;
   /** The source code format */
   format: FiremynaFormat;
-  /** The Function region */
-  region?: FirebaseRegion | FirebaseRegion[];
+}
+
+/**
+ * The {@link httpFunctionTemplate} function props.
+ */
+export interface HTTPFunctionTemplateProps extends BaseFunctionTemplateProps {
   /** Enable cookie middleware */
   cookie?: boolean;
   /** Enable CORS middleware */
@@ -20,39 +32,29 @@ export interface HTTPFunctionTemplateProps extends RuntimeOptions {
 }
 
 /**
- * Generates HTTP function source code.
+ * Generates an HTTP function source code.
  * @param format - the source code format
  * @returns HTTP function source code
  */
 export function httpFunctionTemplate({
   name,
   format,
-  region,
   cookie,
   cors,
-  ...runtime
+  ...initData
 }: HTTPFunctionTemplateProps): string {
-  const regionCode = region
-    ? `.region(${
-        Array.isArray(region)
-          ? region.map((r) => JSON.stringify(r)).join(", ")
-          : JSON.stringify(region)
-      })`
-    : "";
+  const middlewares: FunctionMiddleware[] = [];
 
-  const runtimeJSON = JSON.stringify(runtime);
-  const runtimeCode = runtimeJSON !== "{}" ? `.runWith(${runtimeJSON})` : "";
-
-  const middlewares: HTTPFunctionMiddleware[] = [];
-
-  if (cookie) middlewares.push(httpCookieMiddleware);
-  if (cors) middlewares.push(httpCORSMiddleware);
+  if (cookie) middlewares.push(cookieMiddleware);
+  if (cors) middlewares.push(corsMiddleware);
 
   const imports = [importFunctions(format)]
     .concat(middlewares.map((middleware) => middleware.import))
     .join("\n");
 
-  const inits = middlewares.map((middleware) => middleware.init).join("\n");
+  const inits = middlewares
+    .map((middleware) => `const ${middleware.name} = ${middleware.init};`)
+    .join("\n");
 
   const body = middlewares.reverse().reduce(
     (acc, middleware) => `${middleware.name}(request, response, () => ${acc})`,
@@ -66,7 +68,83 @@ export function httpFunctionTemplate({
 
 ${inits}
 
-export default functions${regionCode}${runtimeCode}.https.onRequest((request, response) => ${body});
+export default ${functionsInit(
+      initData
+    )}.https.onRequest((request, response) => ${body});
+`,
+    { parser: "babel" }
+  );
+}
+
+/**
+ * The {@link expressFunctionTemplate} function props.
+ */
+export interface ExpressFunctionTemplateProps
+  extends HTTPFunctionTemplateProps {}
+
+/**
+ * Generates an Express function source code.
+ * @param format - the source code format
+ * @returns Express function source code
+ */
+export function expressFunctionTemplate({
+  name,
+  format,
+  cookie,
+  cors,
+  ...initData
+}: ExpressFunctionTemplateProps): string {
+  const middlewares: FunctionMiddleware[] = [];
+
+  if (cookie) middlewares.push(cookieMiddleware);
+  if (cors) middlewares.push(corsMiddleware);
+
+  const imports = [importFunctions(format), 'import express from "express";']
+    .concat(middlewares.map((middleware) => middleware.import))
+    .join("\n");
+
+  const inits = middlewares
+    .map((middleware) => `app.use(${middleware.init});`)
+    .join("\n");
+
+  return formatSource(
+    `${imports}
+
+const app = express();
+${inits}
+
+app.get("/", (request, response) => {
+  response.send("Hi from functionName!");
+});
+
+export default ${functionsInit(initData)}.https.onRequest(app);
+`,
+    { parser: "babel" }
+  );
+}
+
+/**
+ * The {@link callableFunctionTemplate} function props.
+ */
+export interface CallableFunctionTemplateProps
+  extends BaseFunctionTemplateProps {}
+
+/**
+ * Generates a callable function source code.
+ * @param format - the source code format
+ * @returns callable function source code
+ */
+export function callableFunctionTemplate({
+  name,
+  format,
+  ...initData
+}: CallableFunctionTemplateProps): string {
+  return formatSource(
+    `${importFunctions(format)}
+
+export default ${functionsInit(initData)}.https.onCall((data, context) => {
+  return "Hi from functionName!";
+});
 `,
     { parser: "babel" }
   );
@@ -75,7 +153,7 @@ export default functions${regionCode}${runtimeCode}.https.onRequest((request, re
 /**
  * HTTP function middleware defition.
  */
-interface HTTPFunctionMiddleware {
+interface FunctionMiddleware {
   /** The middleware import */
   import: string;
   /** The middleware init */
@@ -87,18 +165,18 @@ interface HTTPFunctionMiddleware {
 /**
  * The CORS middleware.
  */
-var httpCORSMiddleware: HTTPFunctionMiddleware = {
+var corsMiddleware: FunctionMiddleware = {
   import: 'import cors from "cors";',
-  init: "const corsMiddleware = cors({ origin: true });",
+  init: "cors({ origin: true })",
   name: "corsMiddleware",
 };
 
 /**
  * The cookie middleware.
  */
-var httpCookieMiddleware: HTTPFunctionMiddleware = {
+var cookieMiddleware: FunctionMiddleware = {
   import: 'import cookieParser from "cookie-parser";',
-  init: "const cookieMiddleware = cookieParser();",
+  init: "cookieParser()",
   name: "cookieMiddleware",
 };
 
@@ -135,4 +213,23 @@ function importFunctions(format: FiremynaFormat): string {
     case "ts":
       return 'import * as functions from "firebase-functions";';
   }
+}
+
+/**
+ * Generates Functions init with the region and runtime settings.
+ * @returns the Functions init code
+ */
+function functionsInit({ region, ...runtime }: FunctionsInitData) {
+  const regionCode = region
+    ? `.region(${
+        Array.isArray(region)
+          ? region.map((r) => JSON.stringify(r)).join(", ")
+          : JSON.stringify(region)
+      })`
+    : "";
+
+  const runtimeJSON = JSON.stringify(runtime);
+  const runtimeCode = runtimeJSON !== "{}" ? `.runWith(${runtimeJSON})` : "";
+
+  return `functions${regionCode}${runtimeCode}`;
 }

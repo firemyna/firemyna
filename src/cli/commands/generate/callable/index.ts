@@ -5,7 +5,10 @@ import { cyan, underline } from "picocolors";
 import { loadConfig, resolveConfig } from "../../../../config";
 import { getFunctionSourcePath, getPaths } from "../../../../paths";
 import { presetProjectPaths } from "../../../../presets/paths";
-import { httpFunctionTemplate } from "../../../../templates";
+import {
+  callableFunctionTemplate,
+  httpFunctionTemplate,
+} from "../../../../templates";
 import {
   configFlag,
   cookieFlag,
@@ -15,10 +18,10 @@ import {
   regionFlag,
 } from "../../../flags";
 
-export default class GenerateHTTP extends Command {
-  static aliases = ["g:http"];
+export default class GenerateCallable extends Command {
+  static aliases = ["g:callable"];
 
-  static description = "Generates an HTTP function";
+  static description = "Generates a callable function";
 
   static args = [
     {
@@ -33,12 +36,10 @@ export default class GenerateHTTP extends Command {
     config: configFlag,
     memory: memoryFlag,
     region: regionFlag,
-    cookie: cookieFlag,
-    cors: corsFlag,
   };
 
   async run() {
-    const { args, flags } = await this.parse(GenerateHTTP);
+    const { args, flags } = await this.parse(GenerateCallable);
 
     const name = args.functionName;
     const cwd = flags.cwd;
@@ -51,7 +52,7 @@ export default class GenerateHTTP extends Command {
     const projectPaths = presetProjectPaths(config.preset);
     const paths = getPaths({ appEnv: "development", cwd, projectPaths });
 
-    CliUx.ux.action.start("Generating an HTTP function");
+    CliUx.ux.action.start("Generating a callable function");
 
     const functionPath = getFunctionSourcePath({
       name,
@@ -63,13 +64,11 @@ export default class GenerateHTTP extends Command {
 
     await writeFile(
       functionPath,
-      httpFunctionTemplate({
+      callableFunctionTemplate({
         name,
         format,
         memory: flags.memory,
         region: flags.region,
-        cookie: flags.cookie,
-        cors: flags.cors,
       })
     );
 

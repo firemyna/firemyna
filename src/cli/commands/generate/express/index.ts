@@ -5,7 +5,10 @@ import { cyan, underline } from "picocolors";
 import { loadConfig, resolveConfig } from "../../../../config";
 import { getFunctionSourcePath, getPaths } from "../../../../paths";
 import { presetProjectPaths } from "../../../../presets/paths";
-import { httpFunctionTemplate } from "../../../../templates";
+import {
+  expressFunctionTemplate,
+  httpFunctionTemplate,
+} from "../../../../templates";
 import {
   configFlag,
   cookieFlag,
@@ -15,10 +18,10 @@ import {
   regionFlag,
 } from "../../../flags";
 
-export default class GenerateHTTP extends Command {
-  static aliases = ["g:http"];
+export default class GenerateExpress extends Command {
+  static aliases = ["g:express"];
 
-  static description = "Generates an HTTP function";
+  static description = "Generates an Express function";
 
   static args = [
     {
@@ -38,7 +41,7 @@ export default class GenerateHTTP extends Command {
   };
 
   async run() {
-    const { args, flags } = await this.parse(GenerateHTTP);
+    const { args, flags } = await this.parse(GenerateExpress);
 
     const name = args.functionName;
     const cwd = flags.cwd;
@@ -51,7 +54,7 @@ export default class GenerateHTTP extends Command {
     const projectPaths = presetProjectPaths(config.preset);
     const paths = getPaths({ appEnv: "development", cwd, projectPaths });
 
-    CliUx.ux.action.start("Generating an HTTP function");
+    CliUx.ux.action.start("Generating an Express function");
 
     const functionPath = getFunctionSourcePath({
       name,
@@ -63,7 +66,7 @@ export default class GenerateHTTP extends Command {
 
     await writeFile(
       functionPath,
-      httpFunctionTemplate({
+      expressFunctionTemplate({
         name,
         format,
         memory: flags.memory,

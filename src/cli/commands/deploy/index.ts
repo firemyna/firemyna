@@ -1,10 +1,9 @@
-import { CliUx, Command } from "@oclif/core";
+import { CliUx } from "@oclif/core";
 import cp from "child_process";
 import { resolve } from "path";
 import { getBuildConfig } from "../../../build";
 import { loadConfig, resolveConfig } from "../../../config";
 import { presetProjectPaths } from "../../../presets/paths";
-import { configFlag, cwdFlag } from "../../flags";
 import Build from "../build";
 
 export default class Deploy extends Build {
