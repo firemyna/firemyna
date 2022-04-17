@@ -33,7 +33,6 @@ export interface HTTPFunctionTemplateProps extends BaseFunctionTemplateProps {
 
 /**
  * Generates an HTTP function source code.
- * @param format - the source code format
  * @returns HTTP function source code
  */
 export function httpFunctionTemplate({
@@ -84,7 +83,6 @@ export interface ExpressFunctionTemplateProps
 
 /**
  * Generates an Express function source code.
- * @param format - the source code format
  * @returns Express function source code
  */
 export function expressFunctionTemplate({
@@ -114,7 +112,7 @@ const app = express();
 ${inits}
 
 app.get("/", (request, response) => {
-  response.send("Hi from functionName!");
+  response.send("Hi from ${name}!");
 });
 
 export default ${functionsInit(initData)}.https.onRequest(app);
@@ -131,7 +129,6 @@ export interface CallableFunctionTemplateProps
 
 /**
  * Generates a callable function source code.
- * @param format - the source code format
  * @returns callable function source code
  */
 export function callableFunctionTemplate({
@@ -143,7 +140,44 @@ export function callableFunctionTemplate({
     `${importFunctions(format)}
 
 export default ${functionsInit(initData)}.https.onCall((data, context) => {
-  return "Hi from functionName!";
+  return "Hi from ${name}!";
+});
+`,
+    { parser: "babel" }
+  );
+}
+
+/**
+ * The {@link scheduleFunctionTemplate} function props.
+ */
+export interface ScheduleFunctionTemplateProps
+  extends BaseFunctionTemplateProps {
+  /** The schedule expression */
+  schedule: string;
+  /** The time zone to use */
+  tz?: string;
+}
+
+/**
+ * Generates a schedule function source code.
+ * @returns schedule function source code
+ */
+export function scheduleFunctionTemplate({
+  name,
+  format,
+  schedule,
+  tz,
+  ...initData
+}: ScheduleFunctionTemplateProps): string {
+  const tzCode = tz ? `.timeZone(${JSON.stringify(tz)})` : "";
+
+  return formatSource(
+    `${importFunctions(format)}
+
+export default ${functionsInit(initData)}.pubsub.schedule(${JSON.stringify(
+      schedule
+    )})${tzCode}.onRun((context) => {
+ console.log("Hi from ${name}!");
 });
 `,
     { parser: "babel" }
