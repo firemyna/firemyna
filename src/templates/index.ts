@@ -177,7 +177,47 @@ export function scheduleFunctionTemplate({
 export default ${functionsInit(initData)}.pubsub.schedule(${JSON.stringify(
       schedule
     )})${tzCode}.onRun((context) => {
- console.log("Hi from ${name}!");
+  console.log("Hi from ${name}!");
+});
+`,
+    { parser: "babel" }
+  );
+}
+
+/**
+ * The Firestore trigger event name.
+ */
+export type FirestoreEvent = "create" | "update" | "delete" | "write";
+
+/**
+ * The {@link firestoreFunctionTemplate} function props.
+ */
+export interface FirestoreFunctionTemplateProps
+  extends BaseFunctionTemplateProps {
+  /** The Firestore trigger event */
+  event: FirestoreEvent;
+  /** The Firestore document path */
+  path: string;
+}
+
+/**
+ * Generates a Firestore trigger function source code.
+ * @returns Firestore trigger function source code
+ */
+export function firestoreFunctionTemplate({
+  name,
+  format,
+  event,
+  path,
+  ...initData
+}: FirestoreFunctionTemplateProps): string {
+  return formatSource(
+    `${importFunctions(format)}
+
+export default ${functionsInit(initData)}.firestore.document(${JSON.stringify(
+      path
+    )})${firestoreEvent(event)} {
+  console.log("Hi from ${name}!");
 });
 `,
     { parser: "babel" }
@@ -266,4 +306,25 @@ function functionsInit({ region, ...runtime }: FunctionsInitData) {
   const runtimeCode = runtimeJSON !== "{}" ? `.runWith(${runtimeJSON})` : "";
 
   return `functions${regionCode}${runtimeCode}`;
+}
+
+/**
+ * Generates the Firestore trigger event function code.
+ *
+ * @param event - the Firestore trigger event
+ */
+function firestoreEvent(event: FirestoreEvent): string {
+  switch (event) {
+    case "create":
+      return `.onCreate((snapshot, context) =>`;
+
+    case "update":
+      return `.onUpdate((change, context) =>`;
+
+    case "delete":
+      return `.onDelete((snapshot, context) =>`;
+
+    case "write":
+      return `.onWrite((change, context) =>`;
+  }
 }
