@@ -1,5 +1,5 @@
-import { Command } from "@oclif/core";
-import { firestoreFunctionTemplate } from "../../../../templates";
+import { Command, Flags } from "@oclif/core";
+import { rtdbFunctionTemplate } from "../../../../templates";
 import { commandEnv, commandFlags } from "../../../shared/base";
 import {
   generateCommandArgs,
@@ -7,23 +7,23 @@ import {
   generateFunction,
 } from "../../../shared/generate";
 
-export default class GenerateFirestore extends Command {
-  static aliases = ["g:firestore"];
+export default class GenerateRtdb extends Command {
+  static aliases = ["g:rtdb"];
 
-  static description = "Generates a Firestore trigger function";
+  static description = "Generates a Realtime Database trigger function";
 
   static args = [
     ...generateCommandArgs,
     {
       name: "event",
       description:
-        'The Firestore trigger event ("create", "update", "delete" or "write")',
+        'The Realtime Database trigger event ("create", "update", "delete" or "write")',
       required: true,
       options: ["create", "update", "delete", "write"],
     },
     {
       name: "path",
-      description: 'The document path (i.e. "/orders/{orderId}")',
+      description: 'The path (i.e. "/orders/{orderId}")',
       required: true,
     },
   ];
@@ -31,10 +31,13 @@ export default class GenerateFirestore extends Command {
   static flags = {
     ...commandFlags,
     ...generateCommandFlags,
+    instance: Flags.string({
+      description: "The Realtime Database instance name",
+    }),
   };
 
   async run() {
-    const { args, flags } = await this.parse(GenerateFirestore);
+    const { args, flags } = await this.parse(GenerateRtdb);
     const { cwd, config: configPath } = flags;
     const name = args.functionName;
 
@@ -46,15 +49,16 @@ export default class GenerateFirestore extends Command {
       cwd,
       configPath,
       name,
-      source: firestoreFunctionTemplate({
+      source: rtdbFunctionTemplate({
         name,
         format,
         memory: flags.memory,
         region: flags.region,
         event: args.event,
         path: args.path,
+        instance: flags.instance,
       }),
-      title: "a Firestore trigger function",
+      title: "a Realtime Database trigger function",
     });
   }
 }

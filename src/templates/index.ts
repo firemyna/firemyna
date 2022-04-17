@@ -185,9 +185,48 @@ export default ${functionsInit(initData)}.pubsub.schedule(${JSON.stringify(
 }
 
 /**
- * The Firestore trigger event name.
+ * The Firebase DB (Firestore or RTDB) trigger event name.
  */
-export type FirestoreEvent = "create" | "update" | "delete" | "write";
+export type FirebaseDBEvent = "create" | "update" | "delete" | "write";
+
+/**
+ * The {@link firestoreFunctionTemplate} function props.
+ */
+export interface RTDBFunctionTemplateProps extends BaseFunctionTemplateProps {
+  /** The Realtime Database trigger event */
+  event: FirebaseDBEvent;
+  /** The path */
+  path: string;
+  /** The Realtime Database instance name */
+  instance?: string;
+}
+
+/**
+ * Generates a Realtime Database trigger function source code.
+ * @returns Realtime Database trigger function source code
+ */
+export function rtdbFunctionTemplate({
+  name,
+  format,
+  event,
+  path,
+  instance,
+  ...initData
+}: RTDBFunctionTemplateProps): string {
+  const instanceCode = instance ? `.instance(${JSON.stringify(instance)})` : "";
+
+  return formatSource(
+    `${importFunctions(format)}
+
+export default ${functionsInit(
+      initData
+    )}.database${instanceCode}.ref(${JSON.stringify(path)})${dbEvent(event)} {
+  console.log("Hi from ${name}!");
+});
+`,
+    { parser: "babel" }
+  );
+}
 
 /**
  * The {@link firestoreFunctionTemplate} function props.
@@ -195,7 +234,7 @@ export type FirestoreEvent = "create" | "update" | "delete" | "write";
 export interface FirestoreFunctionTemplateProps
   extends BaseFunctionTemplateProps {
   /** The Firestore trigger event */
-  event: FirestoreEvent;
+  event: FirebaseDBEvent;
   /** The Firestore document path */
   path: string;
 }
@@ -216,8 +255,8 @@ export function firestoreFunctionTemplate({
 
 export default ${functionsInit(initData)}.firestore.document(${JSON.stringify(
       path
-    )})${firestoreEvent(event)} {
-  console.log("Hi from ${name}!");
+    )})${dbEvent(event)} {
+ console.log("Hi from ${name}!");
 });
 `,
     { parser: "babel" }
@@ -309,11 +348,11 @@ function functionsInit({ region, ...runtime }: FunctionsInitData) {
 }
 
 /**
- * Generates the Firestore trigger event function code.
+ * Generates the Firebase DB trigger event function code.
  *
- * @param event - the Firestore trigger event
+ * @param event - the Firebase DB trigger event code
  */
-function firestoreEvent(event: FirestoreEvent): string {
+function dbEvent(event: FirebaseDBEvent): string {
   switch (event) {
     case "create":
       return `.onCreate((snapshot, context) =>`;
