@@ -22,8 +22,10 @@ export async function promptPreset(): Promise<FiremynaPreset> {
     type: "list",
     choices: [
       { name: "Astro", value: "astro" },
-      { name: "Create React App", value: "cra" },
       { name: "Vite", value: "vite" },
+      { name: "Remix", value: "remix" },
+      { name: "Next.js", value: "next" },
+      { name: "Create React App", value: "cra" },
     ],
   });
   return preset;
