@@ -41,20 +41,32 @@ export function parseSourceDependencies(source: string): string[] {
 
   walk(ast, {
     enter(node) {
+      let depPath: string | undefined;
       // @ts-ignore
       if (node.type === "CallExpression" && node.callee.name === "require") {
         // @ts-ignore
-        const depPath = node.arguments[0].value;
-        if (!depPath) return;
-
-        const isLocal = /\.\/.+/.test(depPath);
-        const captures = depPath.match(/^((?:@[^\/]+\/)?([^\/]+))/);
-        if (!isLocal) deps.push(captures[1]);
+        depPath = node.arguments[0].value;
+      } else if (node.type === "ImportExpression") {
+        // @ts-ignore
+        depPath = node.source.value;
       }
+
+      const depName = matchDep(depPath);
+      if (depName) deps.push(depName);
     },
   });
 
   return uniq(deps);
+}
+
+const depRe = /^((?:@[^\/]+\/)?([^\/]+))/;
+
+function matchDep(depPath: string | undefined) {
+  if (!depPath) return;
+
+  const isLocal = /\.\/.+/.test(depPath);
+  const captures = depPath.match(depRe);
+  if (captures && !isLocal) return captures[1];
 }
 
 export function listPkgDependencies(packageJSON: FiremynaPkg): string[] {

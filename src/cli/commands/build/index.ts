@@ -127,7 +127,7 @@ export default class Build extends Command {
 
     CliUx.ux.action.stop();
 
-    let p: cp.ChildProcess;
+    let p: cp.ChildProcess | undefined;
 
     switch (config.preset) {
       case "astro": {
@@ -160,17 +160,10 @@ export default class Build extends Command {
         });
         break;
       }
-
-      case "next": {
-        p = cp.spawn("npx", ["next", "build"], {
-          cwd: buildConfig.cwd,
-          shell: true,
-          stdio: "inherit",
-        });
-        break;
-      }
     }
 
-    await new Promise((resolve) => p.on("close", resolve));
+    await new Promise((resolve) =>
+      p ? p.on("close", resolve) : resolve(void 0)
+    );
   }
 }
