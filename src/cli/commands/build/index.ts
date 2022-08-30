@@ -160,6 +160,15 @@ export default class Build extends Command {
         });
         break;
       }
+
+      case "next": {
+        p = cp.spawn("npx", ["next", "build"], {
+          cwd: buildConfig.cwd,
+          shell: true,
+          stdio: "inherit",
+        });
+        break;
+      }
     }
 
     await new Promise((resolve) => p.on("close", resolve));
