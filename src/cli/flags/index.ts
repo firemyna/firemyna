@@ -15,7 +15,7 @@ import { FiremynaPreset } from "../../presets";
 export const nodeFlag = Flags.enum<FiremynaFunctionsNode>({
   description: "The Node.js version to use",
   char: "n",
-  options: ["10", "14", "16"],
+  options: ["14", "16", "18"],
   default: defaultNode,
 });
 
