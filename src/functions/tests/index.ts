@@ -13,14 +13,12 @@ import { FiremynaPaths } from "../../paths";
 describe("functions", () => {
   const buildPath = resolve(__dirname, "fixtures/build");
 
-  const config: FiremynaConfigResolved = { node: "14" };
+  const config: FiremynaConfigResolved = { node: "18", format: "ts" };
 
   const cwd = resolve(__dirname, "fixtures");
 
   const paths: FiremynaPaths = {
     cwd,
-    src: "basic",
-    build: "build",
     appEnvBuild: "build",
     functions: {
       src: "basic",
@@ -44,7 +42,6 @@ describe("functions", () => {
     ...buildConfig,
     paths: {
       ...paths,
-      src: "mixed",
       functions: {
         src: "mixed",
         build: "build/functions",
@@ -56,7 +53,6 @@ describe("functions", () => {
     ...buildConfig,
     paths: {
       ...paths,
-      src: "random",
       functions: {
         src: "random",
         build: "build/functions",
@@ -66,7 +62,6 @@ describe("functions", () => {
 
   describe("buildFunctions", () => {
     it("builds function", async () => {
-      const functionsPath = resolve(process.cwd(), "fixtures/basic");
       const result = await buildFunctions(buildConfig);
 
       expect(Object.keys(result).sort()).toEqual([
