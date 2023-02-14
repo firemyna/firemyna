@@ -62,3 +62,7 @@ export const cookieFlag = Flags.boolean({
 export const corsFlag = Flags.boolean({
   description: "Enable CORS middleware",
 });
+
+export const projectFlag = Flags.string({
+  description: "The Firebase project alias or ID",
+});

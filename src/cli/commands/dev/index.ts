@@ -13,7 +13,7 @@ import {
   watchListFunction,
 } from "../../../functions";
 import { presetProjectPaths } from "../../../presets/paths";
-import { configFlag, cwdFlag } from "../../flags";
+import { configFlag, cwdFlag, projectFlag } from "../../flags";
 import pc from "picocolors";
 import { Formatter } from "picocolors/types";
 
@@ -23,10 +23,12 @@ export default class Dev extends Command {
   static flags = {
     cwd: cwdFlag,
     config: configFlag,
+    project: projectFlag,
   };
 
   async run() {
     const { flags } = await this.parse(Dev);
+    const { project } = flags;
     const cwd = resolve(flags.cwd);
 
     const config = await loadConfig(cwd, flags.config);
@@ -83,7 +85,9 @@ export default class Dev extends Command {
 
           const firebaseChild = cp.spawn(
             "npx",
-            ["firebase", "serve", "--only", "functions"],
+            ["firebase", "serve", "--only", "functions"].concat(
+              project ? ["--project", project] : []
+            ),
             {
               cwd: resolve(buildConfig.cwd, buildConfig.paths.appEnvBuild),
               shell: true,
