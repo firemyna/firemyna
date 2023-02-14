@@ -62,8 +62,23 @@ export async function prepareBuild(buildConfig: FiremynaBuildConfig) {
   await Promise.all<any>([
     writeFile(
       resolve(cwd, paths.appEnvBuild, "package.json"),
-      JSON.stringify(pkg)
+      JSON.stringify(pkg, null, 2)
     ),
+
+    // Copy the Storage security rules
+    mode === "dev" &&
+      buildConfig.config.emulators?.storage &&
+      copyToBuild(
+        buildConfig.config.storageSecurityRulesPath || "storage.rules"
+      ),
+
+    // Copy the Firestore security rules
+    mode === "dev" &&
+      buildConfig.config.emulators?.firestore &&
+      copyToBuild(
+        buildConfig.config.firestoreSecurityRulesPath || "firestore.rules",
+        { ignore: true } // Firestore emulator works without rules
+      ),
 
     // TODO: Add support for Yarn and pnpm
     copyToBuild("package-lock.json", { ignore: true }),

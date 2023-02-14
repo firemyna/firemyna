@@ -39,7 +39,7 @@ export interface FiremynaConfigResolved {
   format: FiremynaFormat;
   /** The config preset */
   preset?: FiremynaPreset;
-  /** The path (relative to cwd or absolute) to the functions directory */
+  /** The path (relative to the config) to the functions directory */
   functionsPath?: string;
   /** The functions build path */
   buildPath?: string;
@@ -47,7 +47,7 @@ export interface FiremynaConfigResolved {
   onlyFunctions?: string[];
   /** Specify functions ignore patterns */
   functionsIgnorePaths?: RegExp[];
-  /** The init module path (relative to cwd or absolute) */
+  /** The init module path (relative to the config) */
   functionsInitPath?: string;
   /** The Functions runtime config path. [See Firebase docs](https://firebase.google.com/docs/functions/local-emulator#set_up_functions_configuration_optional).
    * @deprecated - this is an outdated approach, use env variables. [See Firebase docs](https://firebase.google.com/docs/functions/config-env#env-variables). */
@@ -56,6 +56,10 @@ export interface FiremynaConfigResolved {
   emulators?: FiremynaConfigEmulators;
   /** Enable hosting. TODO: Copy static files. */
   hosting?: boolean;
+  /** The path (relative to the config) to the storage security rules. Defaults to `storage.rules`. */
+  storageSecurityRulesPath?: string;
+  /** The path (relative to the config) to the storage security rules. Defaults to `firestore.rules`. */
+  firestoreSecurityRulesPath?: string;
 }
 
 /**
