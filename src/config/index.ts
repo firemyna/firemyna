@@ -7,12 +7,12 @@ import { getConfigFileName } from "./paths";
 /**
  * The Firebase Functions Node.js version.
  */
-export type FiremynaFunctionsNode = "10" | "14" | "14" | "14" | "16";
+export type FiremynaFunctionsNode = "14" | "16" | "18";
 
 /**
  * The default Node.js version.
  */
-export const defaultNode = "16";
+export const defaultNode = "18";
 
 /**
  * The source code format.
