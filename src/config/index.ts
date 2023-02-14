@@ -24,10 +24,13 @@ export type FiremynaFormat = "ts" | "js";
  */
 export const defaultFormat = "js";
 
+/**
+ * Firemyna app config. The user version with all fields optional.
+ */
 export type FiremynaConfig = Partial<FiremynaConfigResolved>;
 
 /**
- * Firemyna app config.
+ * Firemyna app config. Resolved version with all required fields present.
  */
 export interface FiremynaConfigResolved {
   /** The Functions Node.js version; default - {@link defaultNode} */
@@ -46,10 +49,82 @@ export interface FiremynaConfigResolved {
   functionsIgnorePaths?: RegExp[];
   /** The init module path (relative to cwd or absolute) */
   functionsInitPath?: string;
-  /** The Functions runtime version */
-  functionsRuntime?: FiremynaFunctionsNode;
-  /** The Functions runtime config path */
+  /** The Functions runtime config path. [See Firebase docs](https://firebase.google.com/docs/functions/local-emulator#set_up_functions_configuration_optional).
+   * @deprecated - this is an outdated approach, use env variables. [See Firebase docs](https://firebase.google.com/docs/functions/config-env#env-variables). */
   functionsRuntimeConfigPath?: string;
+  /** Emulators config, if not defined, Functions will start in serve mode. */
+  emulators?: FiremynaConfigEmulators;
+  /** Enable hosting. TODO: Copy static files. */
+  hosting?: boolean;
+}
+
+/**
+ * The Firemyna emulators config.
+ */
+export interface FiremynaConfigEmulators {
+  /** The Authentication emulator. Set true or object to enable it. */
+  auth?:
+    | boolean
+    | {
+        /** The Authentication emulator port. Default - 9099 */
+        port?: number;
+      };
+  /** The Functions emulator. Set true or object to enable it. */
+  functions?:
+    | boolean
+    | {
+        /** The Functions emulator port. Default - 5001 */
+        port?: number;
+      };
+  /** The Firestore emulator. Set true or object to enable it. */
+  firestore?:
+    | boolean
+    | {
+        /** The Firestore emulator port. Default - 8080 */
+        port?: number;
+      };
+  /** The Realtime Database emulator. Set true or object to enable it. */
+  database?:
+    | boolean
+    | {
+        /** The Realtime Database emulator port. Default - 9000 */
+        port?: number;
+      };
+  /** The Hosting emulator. Set true or object to enable it. */
+  hosting?:
+    | boolean
+    | {
+        /** The Hosting emulator port. Default - 5000 */
+        port?: number;
+      };
+  /** The Pub/Sub emulator. Set true or object to enable it. */
+  pubsub?:
+    | boolean
+    | {
+        /** The Pub/Sub emulator port. Default - 8085 */
+        port?: number;
+      };
+  /** The Storage emulator. Set true or object to enable it. */
+  storage?:
+    | boolean
+    | {
+        /** The Storage emulator port. Default - 9199 */
+        port?: number;
+      };
+  /** The Eventarc emulator. Set true or object to enable it. */
+  eventarc?:
+    | boolean
+    | {
+        /** The Eventarc emulator port. Default - 9299 */
+        port?: number;
+      };
+  /** The Emulator UI. Defaults to true, set false to disable it. */
+  ui?:
+    | boolean
+    | {
+        /** The Emulator UI port. Default - 4000 */
+        port?: number;
+      };
 }
 
 /**

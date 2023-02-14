@@ -3,7 +3,7 @@ import cp from "child_process";
 import { BuildIncremental } from "esbuild";
 import { parse as parsePath, resolve } from "path";
 import { FiremynaBuildConfig, getBuildConfig } from "../../../build";
-import { prepareBuildStruct } from "../../../build/prepare";
+import { prepareBuild } from "../../../build/prepare";
 import { loadConfig, resolveConfig } from "../../../config";
 import { writeEsbuildFile } from "../../../esbuild";
 import {
@@ -48,7 +48,7 @@ export default class Dev extends Command {
       renderer: false,
     });
 
-    await prepareBuildStruct(buildConfig);
+    await prepareBuild(buildConfig);
 
     const builds: Record<string, BuildIncremental> = {};
     let functions: FiremynaFunction[] = [];
@@ -85,9 +85,12 @@ export default class Dev extends Command {
 
           const firebaseChild = cp.spawn(
             "npx",
-            ["firebase", "serve", "--only", "functions"].concat(
-              project ? ["--project", project] : []
-            ),
+            (buildConfig.config.emulators
+              ? ["firebase", "emulators:start"]
+              : ["firebase", "serve", "--only", "functions"].concat(
+                  config.hosting ? ["--only", "hosting"] : []
+                )
+            ).concat(project ? ["--project", project] : []),
             {
               cwd: resolve(buildConfig.cwd, buildConfig.paths.appEnvBuild),
               shell: true,

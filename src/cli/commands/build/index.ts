@@ -4,7 +4,7 @@ import { difference, remove } from "js-fns";
 import { resolve } from "path";
 import { promisify } from "util";
 import { getBuildConfig } from "../../../build";
-import { prepareBuildStruct } from "../../../build/prepare";
+import { prepareBuild } from "../../../build/prepare";
 import { loadConfig, resolveConfig } from "../../../config";
 import { listPkgDependencies, parseBuildDependencies } from "../../../deps";
 import { writeEsbuildFile } from "../../../esbuild";
@@ -52,7 +52,7 @@ export default class Build extends Command {
         return functions;
       }),
 
-      prepareBuildStruct(buildConfig),
+      prepareBuild(buildConfig),
 
       config.preset === "remix"
         ? await exec("npx remix build", {

@@ -12,7 +12,7 @@
     "outDir": "lib",
     "declaration": true,
     "resolveJsonModule": true,
-    "checkJs": true
+    "skipLibCheck": true
   },
   "include": ["src/**/*", "*.js"]
 }
