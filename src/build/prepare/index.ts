@@ -4,6 +4,7 @@ import { FiremynaBuildConfig } from "..";
 import { getFunctionsBuildPath } from "../../paths";
 import { FiremynaPkg } from "../../pkg";
 import { presetCommand } from "../../presets";
+import { FiremynaConfigResolved } from "../../config";
 
 /**
  * Generates Firebase build structure.
@@ -56,8 +57,7 @@ export async function prepareBuild(buildConfig: FiremynaBuildConfig) {
     engines: { node: config.node },
   });
 
-  buildConfig.config.preset &&
-    presetCommand(buildConfig.config.preset, "prepare-package-json")?.(pkg);
+  config.preset && presetCommand(config.preset, "prepare-package-json")?.(pkg);
 
   await Promise.all<any>([
     writeFile(
@@ -66,18 +66,14 @@ export async function prepareBuild(buildConfig: FiremynaBuildConfig) {
     ),
 
     // Copy the Storage security rules
-    mode === "dev" &&
-      buildConfig.config.emulators?.storage &&
-      copyToBuild(
-        buildConfig.config.storageSecurityRulesPath || "storage.rules"
-      ),
+    ((mode === "dev" && config.emulators?.storage) || config.storage) &&
+      copyToBuild(storageRulesPath(config)),
 
     // Copy the Firestore security rules
-    mode === "dev" &&
-      buildConfig.config.emulators?.firestore &&
+    ((mode === "dev" && config.emulators?.firestore) || config.firestore) &&
       copyToBuild(
-        buildConfig.config.firestoreSecurityRulesPath || "firestore.rules",
-        { ignore: true } // Firestore emulator works without rules
+        firestoreRulesPath(config),
+        { ignore: mode === "dev" } // Firestore emulator works without rules
       ),
 
     // TODO: Add support for Yarn and pnpm
@@ -108,6 +104,14 @@ export interface FiremynaFirebaseJSON {
   };
   functions: {
     source: string;
+  };
+
+  storage?: {
+    rules: string;
+  };
+
+  firestore?: {
+    rules: string;
   };
 
   emulators?: {
@@ -170,19 +174,21 @@ export interface FiremynaFirebaseJSON {
  * @returns Firebase JSON file
  */
 function firebaseJSON(buildConfig: FiremynaBuildConfig): FiremynaFirebaseJSON {
+  const { mode, config, renderer } = buildConfig;
+
   const json: FiremynaFirebaseJSON = {
     functions: {
       source: ".",
     },
   };
 
-  if (buildConfig.renderer || buildConfig.config.hosting) {
+  if (renderer || config.hosting) {
     json.hosting = {
       // TODO: Get this from paths
       public: "hosting",
     };
 
-    if (buildConfig.renderer) {
+    if (renderer) {
       json.hosting.rewrites = [
         {
           source: "/**",
@@ -192,84 +198,110 @@ function firebaseJSON(buildConfig: FiremynaBuildConfig): FiremynaFirebaseJSON {
     }
   }
 
-  if (buildConfig.config.emulators) {
+  if (config.emulators) {
     json.emulators = {
       singleProjectMode: true,
     };
 
-    if (buildConfig.config.emulators.auth)
+    if (config.emulators.auth)
       json.emulators.auth = {
         port:
-          (typeof buildConfig.config.emulators.auth === "object" &&
-            buildConfig.config.emulators.auth.port) ||
+          (typeof config.emulators.auth === "object" &&
+            config.emulators.auth.port) ||
           9099,
       };
 
-    if (buildConfig.config.emulators.functions)
+    if (config.emulators.functions)
       json.emulators.functions = {
         port:
-          (typeof buildConfig.config.emulators.functions === "object" &&
-            buildConfig.config.emulators.functions.port) ||
+          (typeof config.emulators.functions === "object" &&
+            config.emulators.functions.port) ||
           5001,
       };
 
-    if (buildConfig.config.emulators.firestore)
+    if (config.emulators.firestore)
       json.emulators.firestore = {
         port:
-          (typeof buildConfig.config.emulators.firestore === "object" &&
-            buildConfig.config.emulators.firestore.port) ||
+          (typeof config.emulators.firestore === "object" &&
+            config.emulators.firestore.port) ||
           8080,
       };
 
-    if (buildConfig.config.emulators.database)
+    if (config.emulators.database)
       json.emulators.database = {
         port:
-          (typeof buildConfig.config.emulators.database === "object" &&
-            buildConfig.config.emulators.database.port) ||
+          (typeof config.emulators.database === "object" &&
+            config.emulators.database.port) ||
           9000,
       };
 
-    if (buildConfig.config.emulators.hosting)
+    if (config.emulators.hosting)
       json.emulators.hosting = {
         port:
-          (typeof buildConfig.config.emulators.hosting === "object" &&
-            buildConfig.config.emulators.hosting.port) ||
+          (typeof config.emulators.hosting === "object" &&
+            config.emulators.hosting.port) ||
           5000,
       };
 
-    if (buildConfig.config.emulators.pubsub)
+    if (config.emulators.pubsub)
       json.emulators.pubsub = {
         port:
-          (typeof buildConfig.config.emulators.pubsub === "object" &&
-            buildConfig.config.emulators.pubsub.port) ||
+          (typeof config.emulators.pubsub === "object" &&
+            config.emulators.pubsub.port) ||
           8085,
       };
 
-    if (buildConfig.config.emulators.storage)
+    if (config.emulators.storage)
       json.emulators.storage = {
         port:
-          (typeof buildConfig.config.emulators.storage === "object" &&
-            buildConfig.config.emulators.storage.port) ||
+          (typeof config.emulators.storage === "object" &&
+            config.emulators.storage.port) ||
           9199,
       };
 
-    if (buildConfig.config.emulators.eventarc)
+    if (config.emulators.eventarc)
       json.emulators.eventarc = {
         port:
-          (typeof buildConfig.config.emulators.eventarc === "object" &&
-            buildConfig.config.emulators.eventarc.port) ||
+          (typeof config.emulators.eventarc === "object" &&
+            config.emulators.eventarc.port) ||
           9299,
       };
 
-    if (buildConfig.config.emulators.ui !== false)
+    if (config.emulators.ui !== false)
       json.emulators.ui = {
         enabled: true,
         port:
-          (typeof buildConfig.config.emulators.ui === "object" &&
-            buildConfig.config.emulators.ui.port) ||
+          (typeof config.emulators.ui === "object" &&
+            config.emulators.ui.port) ||
           4000,
       };
   }
 
+  if ((mode === "dev" && config.emulators?.storage) || config.storage) {
+    json.storage = {
+      rules: storageRulesPath(config),
+    };
+  }
+
+  if ((mode === "dev" && config.emulators?.firestore) || config.firestore) {
+    json.firestore = {
+      rules: firestoreRulesPath(config),
+    };
+  }
+
   return json;
+}
+
+function firestoreRulesPath(config: FiremynaConfigResolved) {
+  return (
+    (typeof config.firestore === "object" && config.firestore.rulesPath) ||
+    "firestore.rules"
+  );
+}
+
+function storageRulesPath(config: FiremynaConfigResolved) {
+  return (
+    (typeof config.storage === "object" && config.storage.rulesPath) ||
+    "storage.rules"
+  );
 }

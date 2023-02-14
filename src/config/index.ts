@@ -56,10 +56,26 @@ export interface FiremynaConfigResolved {
   emulators?: FiremynaConfigEmulators;
   /** Enable hosting. TODO: Copy static files. */
   hosting?: boolean;
-  /** The path (relative to the config) to the storage security rules. Defaults to `storage.rules`. */
-  storageSecurityRulesPath?: string;
-  /** The path (relative to the config) to the storage security rules. Defaults to `firestore.rules`. */
-  firestoreSecurityRulesPath?: string;
+  /** The Storage config. */
+  storage?: boolean | FiremynaConfigStorage;
+  /** The Firestore config. */
+  firestore?: boolean | FiremynaConfigFirestore;
+}
+
+/**
+ * The Firemyna Storage config.
+ */
+export interface FiremynaConfigStorage {
+  /** The path (relative to the config) to the Storage security rules. Defaults to `storage.rules`. */
+  rulesPath?: string;
+}
+
+/**
+ * The Firemyna Firestore config.
+ */
+export interface FiremynaConfigFirestore {
+  /** The path (relative to the config) to the Firestore security rules. Defaults to `storage.rules`. */
+  rulesPath?: string;
 }
 
 /**
