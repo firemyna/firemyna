@@ -65,7 +65,8 @@ export async function prepareBuildStruct(buildConfig: FiremynaBuildConfig) {
       JSON.stringify(pkg)
     ),
 
-    copyToBuild("package-lock.json"),
+    // TODO: Add support for Yarn and pnpm
+    copyToBuild("package-lock.json", { ignore: true }),
 
     // TODO: Generate from the config
     copyToBuild(".firebaserc"),
