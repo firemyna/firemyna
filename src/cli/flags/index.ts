@@ -40,6 +40,10 @@ export const configFlag = Flags.string({
   description: "Path to the Firemyna config",
 });
 
+export const functionsFlag = Flags.string({
+  description: "Path to the Functions source code",
+});
+
 export const memoryFlag = Flags.enum<FirebaseMemoryOption>({
   description: "The Firebase Functions memory",
   options: firebaseMemoryOptions,

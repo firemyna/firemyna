@@ -42,7 +42,10 @@ export async function commandEnv(
   if (!config) throw new Error("Can not find the Firemyna config file");
   const resolvedConfig = resolveConfig(config);
 
-  const projectPaths = presetProjectPaths(resolvedConfig.preset);
+  const projectPaths = presetProjectPaths(
+    resolvedConfig.preset,
+    resolvedConfig.functionsPath
+  );
   const paths = getPaths({ appEnv: "development", cwd, projectPaths });
 
   _commandEnv = { config: resolvedConfig, paths };

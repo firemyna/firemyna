@@ -20,15 +20,15 @@
 import { mkdir } from "fs/promises";
 import { relative, join, resolve } from "path";
 import { FiremynaAppEnv } from "../app";
-import { FiremynaFormat } from "../config";
+import { FiremynaConfigResolved, FiremynaFormat } from "../config";
 
 /**
  * The project paths containing the location of the source code and the build.
  * This is one of the base paths object that is defined in the config.
  */
 export interface FiremynaProjectPaths {
-  /** The source code path */
-  src: string;
+  /** The Functions source path */
+  functions: string;
   /** The build path */
   build: string;
 }
@@ -37,9 +37,11 @@ export interface FiremynaProjectPaths {
  * Generate the default project paths object.
  * @returns the default project paths
  */
-export function defaultProjectPaths(): FiremynaProjectPaths {
+export function defaultProjectPaths(
+  functionsPath: string | undefined
+): FiremynaProjectPaths {
   return {
-    src: "app",
+    functions: functionsPath || "functions",
     build: "build",
   };
 }
@@ -47,7 +49,7 @@ export function defaultProjectPaths(): FiremynaProjectPaths {
 /**
  * The Firemyna paths containing the paths needed to run any command.
  */
-export interface FiremynaPaths extends FiremynaProjectPaths {
+export interface FiremynaPaths {
   /** The current working directory relative to process.cwd() */
   cwd: string;
   /** The app environment build path (i.e. build/production) */
@@ -96,7 +98,7 @@ export function getPaths({
     cwd,
     appEnvBuild,
     functions: {
-      src: getFunctionsSrcPath(projectPaths.src),
+      src: projectPaths.functions,
       build: getFunctionsBuildPath(appEnvBuild),
     },
     hosting: {
@@ -116,15 +118,6 @@ export function getAppEnvBuild(
   buildPath: string
 ): string {
   return join(buildPath, appEnv);
-}
-
-/**
- * Generates functions source code path.
- * @param srcPath - the app source path
- * @returns the functions source code path
- */
-export function getFunctionsSrcPath(srcPath: string): string {
-  return join(srcPath, "functions");
 }
 
 /**

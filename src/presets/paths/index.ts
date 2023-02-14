@@ -11,38 +11,40 @@ import { defaultProjectPaths, FiremynaProjectPaths } from "../../paths";
 /**
  * Generate the preset project paths object.
  * @param preset the preset to get paths for
+ * @param functionsPath the functions path
  * @returns the preset project paths
  */
 export function presetProjectPaths(
-  preset: FiremynaPreset | undefined
+  preset: FiremynaPreset | undefined,
+  functionsPath: string | undefined
 ): FiremynaProjectPaths {
   switch (preset) {
     case "astro":
     case "vite":
       return {
-        src: "src",
+        functions: "src/functions",
         build: "dist",
       };
 
     case "cra":
       return {
-        src: "src",
+        functions: "src/functions",
         build: "build",
       };
 
     case "remix":
       return {
-        src: "app",
+        functions: "app/functions",
         build: "build",
       };
 
     case "next":
       return {
-        src: ".",
+        functions: "functions",
         build: "build",
       };
 
     case undefined:
-      return defaultProjectPaths();
+      return defaultProjectPaths(functionsPath);
   }
 }

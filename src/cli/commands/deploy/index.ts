@@ -21,7 +21,10 @@ export default class Deploy extends Build {
     if (!config) throw new Error("Can not find the Firemyna config file");
     const resolvedConfig = resolveConfig(config);
 
-    const projectPaths = presetProjectPaths(config.preset);
+    const projectPaths = presetProjectPaths(
+      config.preset,
+      config.functionsPath
+    );
     const buildConfig = getBuildConfig({
       mode: "build",
       appEnv: "production",

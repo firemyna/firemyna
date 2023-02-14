@@ -1,9 +1,10 @@
 import { CliUx, Command } from "@oclif/core";
 import { writeFile } from "fs/promises";
 import { resolve } from "path";
+import { FiremynaConfigResolved } from "../../../config";
 import { getConfigFileName } from "../../../config/paths";
 import { ensurePath, getFunctionSourcePath, getPaths } from "../../../paths";
-import { presetProjectPaths as presetProjectPaths } from "../../../presets/paths";
+import { presetProjectPaths } from "../../../presets/paths";
 import {
   firemynaConfigTemplate,
   httpFunctionTemplate,
@@ -12,10 +13,11 @@ import {
   configFlag,
   cwdFlag,
   formatFlag,
+  functionsFlag,
   nodeFlag,
   presetFlag,
 } from "../../flags";
-import { promptFormat } from "../../prompts";
+import { promptFormat, promptFunctions } from "../../prompts";
 
 export default class Init extends Command {
   static description = "Init the Firemyna project";
@@ -26,6 +28,7 @@ export default class Init extends Command {
     node: nodeFlag,
     format: formatFlag,
     config: configFlag,
+    functions: functionsFlag,
   };
 
   async run() {
@@ -34,9 +37,10 @@ export default class Init extends Command {
     const node = flags.node;
     const preset = flags.preset;
     const format = flags.format ?? (await promptFormat());
+    const functionsPath = flags.functions ?? (await promptFunctions());
     const configPath = flags.config || getConfigFileName(format);
 
-    const projectPaths = presetProjectPaths(preset);
+    const projectPaths = presetProjectPaths(preset, functionsPath);
     const paths = getPaths({ appEnv: "development", cwd, projectPaths });
 
     CliUx.ux.action.start(
@@ -48,6 +52,10 @@ export default class Init extends Command {
     // Ensure the functions source code directory as well as cwd exist.
     await ensurePath(cwd, paths.functions.src);
 
+    const config: FiremynaConfigResolved = { format, node };
+    if (preset) config.preset = preset;
+    else config.functionsPath = functionsPath;
+
     await Promise.all([
       // Generate demo function
       writeFile(
@@ -56,10 +64,7 @@ export default class Init extends Command {
       ),
 
       // Generate the Firemyna config
-      writeFile(
-        resolve(cwd, configPath),
-        firemynaConfigTemplate({ preset, format, node })
-      ),
+      writeFile(resolve(cwd, configPath), firemynaConfigTemplate(config)),
     ]);
 
     CliUx.ux.action.stop();

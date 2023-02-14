@@ -63,7 +63,7 @@ export function getBuildConfig({
     appEnv,
     cwd,
     config,
-    paths: getPaths({ appEnv, cwd, projectPaths: projectPaths }),
+    paths: getPaths({ appEnv, cwd, projectPaths }),
     renderer,
   };
 }

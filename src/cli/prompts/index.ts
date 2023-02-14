@@ -30,3 +30,13 @@ export async function promptPreset(): Promise<FiremynaPreset> {
   });
   return preset;
 }
+
+export async function promptFunctions(): Promise<FiremynaFormat> {
+  const { functionsPath } = await inquirer.prompt({
+    name: "functionsPath",
+    message: "Enter the path to the Functions source code",
+    type: "input",
+    default: "functions",
+  });
+  return functionsPath;
+}
