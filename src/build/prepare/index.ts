@@ -30,11 +30,20 @@ export async function prepareBuildStruct(buildConfig: FiremynaBuildConfig) {
     recursive: true,
   });
 
-  function copyToBuild(name: string, out?: string) {
+  interface CopyToBuildOptions {
+    /** The filename to write to */
+    out?: string;
+    /** Ignore if the file does not exist or fails for any other reason */
+    ignore?: boolean;
+  }
+
+  function copyToBuild(name: string, { out, ignore }: CopyToBuildOptions = {}) {
     return copyFile(
       resolve(cwd, name),
       resolve(cwd, paths.appEnvBuild, out || name)
-    );
+    ).catch((error) => {
+      if (!ignore) throw error;
+    });
   }
 
   const pkg: FiremynaPkg = JSON.parse(
@@ -68,7 +77,9 @@ export async function prepareBuildStruct(buildConfig: FiremynaBuildConfig) {
 
     mode === "dev" &&
       config.functionsRuntimeConfigPath &&
-      copyToBuild(config.functionsRuntimeConfigPath, ".runtimeconfig.json"),
+      copyToBuild(config.functionsRuntimeConfigPath, {
+        out: ".runtimeconfig.json",
+      }),
   ]);
 
   return { pkg };
