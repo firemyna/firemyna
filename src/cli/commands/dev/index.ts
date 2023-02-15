@@ -74,6 +74,12 @@ export default class Dev extends Command {
       return writeEsbuildFile(build);
     }
 
+    const children: cp.ChildProcessWithoutNullStreams[] = [];
+
+    process.on("SIGINT", () => {
+      children.forEach((child) => child.kill("SIGINT"));
+    });
+
     watchListFunction(buildConfig, async (event) => {
       switch (event.type) {
         case "initial": {
@@ -100,12 +106,7 @@ export default class Dev extends Command {
             (buildConfig.config.emulators
               ? ["firebase", "emulators:start"].concat(
                   config.emulators?.persistence !== false
-                    ? [
-                        "--import",
-                        emulatorsPath,
-                        "--export-on-exit",
-                        emulatorsPath,
-                      ]
+                    ? [`--import=${emulatorsPath}`, "--export-on-exit"]
                     : []
                 )
               : ["firebase", "serve", "--only", "functions"].concat(
@@ -117,6 +118,8 @@ export default class Dev extends Command {
               shell: true,
             }
           );
+
+          children.push(firebaseChild);
 
           logChild({
             child: firebaseChild,
@@ -154,6 +157,8 @@ export default class Dev extends Command {
           shell: true,
         });
 
+        children.push(astroChild);
+
         logChild({
           child: astroChild,
           formatter: pc.green,
@@ -169,6 +174,8 @@ export default class Dev extends Command {
           shell: true,
         });
 
+        children.push(craChild);
+
         logChild({
           child: craChild,
           formatter: pc.green,
@@ -183,6 +190,8 @@ export default class Dev extends Command {
           cwd: buildConfig.cwd,
           shell: true,
         });
+
+        children.push(viteChild);
 
         logChild({
           child: viteChild,
@@ -200,19 +209,23 @@ export default class Dev extends Command {
           env: { ...process.env, NODE_ENV: "development" },
         });
 
+        children.push(remixChild);
+
         logChild({ child: remixChild, formatter: pc.green, label: "Remix" });
 
         break;
       }
 
       case "next": {
-        const remixChild = cp.spawn("npx", ["next", "dev"], {
+        const nextChild = cp.spawn("npx", ["next", "dev"], {
           cwd: buildConfig.cwd,
           shell: true,
           env: { ...process.env, NODE_ENV: "development" },
         });
 
-        logChild({ child: remixChild, formatter: pc.green, label: "Next.js" });
+        children.push(nextChild);
+
+        logChild({ child: nextChild, formatter: pc.green, label: "Next.js" });
 
         break;
       }
