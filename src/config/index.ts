@@ -82,6 +82,8 @@ export interface FiremynaConfigFirestore {
  * The Firemyna emulators config.
  */
 export interface FiremynaConfigEmulators {
+  /** The directory to save the emulators' data. Set false to disable the persistence. Defaults to `.firebase/emulators`. */
+  persistence?: boolean | string;
   /** The Authentication emulator. Set true or object to enable it. */
   auth?:
     | boolean

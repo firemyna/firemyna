@@ -1,7 +1,7 @@
 import { Command } from "@oclif/core";
 import cp from "child_process";
 import { BuildIncremental } from "esbuild";
-import { parse as parsePath, resolve } from "path";
+import { join, parse as parsePath, relative, resolve } from "path";
 import { FiremynaBuildConfig, getBuildConfig } from "../../../build";
 import { prepareBuild } from "../../../build/prepare";
 import { loadConfig, resolveConfig } from "../../../config";
@@ -84,10 +84,30 @@ export default class Dev extends Command {
             buildIndex(),
           ]);
 
+          const cwdRelativeToBuildDir = relative(
+            buildConfig.paths.appEnvBuild,
+            cwd
+          );
+          const emulatorsPath = join(
+            cwdRelativeToBuildDir,
+            typeof config.emulators?.persistence === "string"
+              ? config.emulators.persistence
+              : ".firebase/emulators"
+          );
+
           const firebaseChild = cp.spawn(
             "npx",
             (buildConfig.config.emulators
-              ? ["firebase", "emulators:start"]
+              ? ["firebase", "emulators:start"].concat(
+                  config.emulators?.persistence !== false
+                    ? [
+                        "--import",
+                        emulatorsPath,
+                        "--export-on-exit",
+                        emulatorsPath,
+                      ]
+                    : []
+                )
               : ["firebase", "serve", "--only", "functions"].concat(
                   config.hosting ? ["--only", "hosting"] : []
                 )
