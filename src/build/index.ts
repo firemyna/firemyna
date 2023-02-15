@@ -1,7 +1,6 @@
 import { FiremynaAppEnv } from "../app";
 import { FiremynaConfigResolved } from "../config";
 import { FiremynaPaths, FiremynaProjectPaths, getPaths } from "../paths";
-import { FiremynaPreset } from "../presets";
 
 /**
  * The build mode:
@@ -16,6 +15,8 @@ export type FiremynaBuildMode = "build" | "dev";
 export interface FiremynaBuildConfig {
   /** Firemyna build mode */
   mode: FiremynaBuildMode;
+  /** The Firebase project alias */
+  project: string | undefined;
   /** The app environment */
   appEnv: FiremynaAppEnv;
   /** The current working directory */
@@ -34,6 +35,8 @@ export interface FiremynaBuildConfig {
 export interface GetBuildConfigProps {
   /** Firemyna build mode */
   mode: FiremynaBuildMode;
+  /** The Firebase project alias */
+  project: string | undefined;
   /** The app environment */
   appEnv: FiremynaAppEnv;
   /** The current working directory */
@@ -52,6 +55,7 @@ export interface GetBuildConfigProps {
  */
 export function getBuildConfig({
   mode,
+  project,
   appEnv,
   cwd,
   projectPaths,
@@ -60,6 +64,7 @@ export function getBuildConfig({
 }: GetBuildConfigProps): FiremynaBuildConfig {
   return {
     mode,
+    project,
     appEnv,
     cwd,
     config,

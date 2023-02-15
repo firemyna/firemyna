@@ -11,7 +11,7 @@ import { writeEsbuildFile } from "../../../esbuild";
 import { buildFile, buildFunctions } from "../../../functions";
 import { presetProjectPaths } from "../../../presets/paths";
 import { nextRenderer, remixRenderer } from "../../../presets/renderer";
-import { configFlag, cwdFlag } from "../../flags";
+import { configFlag, cwdFlag, projectFlag } from "../../flags";
 
 const exec = promisify(cp.exec);
 
@@ -21,10 +21,12 @@ export default class Build extends Command {
   static flags = {
     cwd: cwdFlag,
     config: configFlag,
+    project: projectFlag,
   };
 
   async run() {
     const { flags } = await this.parse(Build);
+    const { project } = flags;
     const cwd = resolve(flags.cwd);
 
     const config = await loadConfig(cwd, flags.config);
@@ -37,6 +39,7 @@ export default class Build extends Command {
     );
     const buildConfig = getBuildConfig({
       mode: "build",
+      project,
       appEnv: "production",
       cwd,
       config: resolvedConfig,
@@ -46,7 +49,7 @@ export default class Build extends Command {
 
     CliUx.ux.action.start("Building the app");
 
-    const [functions, { pkg }, rendererResult] = await Promise.all([
+    const [_functions, { pkg }, _rendererResult] = await Promise.all([
       buildFunctions(buildConfig).then(async (functions) => {
         await Promise.all(Object.values(functions).map(writeEsbuildFile));
         return functions;

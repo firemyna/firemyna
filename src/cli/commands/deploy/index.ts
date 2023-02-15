@@ -15,6 +15,7 @@ export default class Deploy extends Build {
     // TODO: Reuse the config from the build command?
 
     const { flags } = await this.parse(Deploy);
+    const { project } = flags;
     const cwd = resolve(flags.cwd);
 
     const config = await loadConfig(cwd, flags.config);
@@ -27,6 +28,7 @@ export default class Deploy extends Build {
     );
     const buildConfig = getBuildConfig({
       mode: "build",
+      project,
       appEnv: "production",
       cwd,
       config: resolvedConfig,

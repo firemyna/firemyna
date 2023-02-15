@@ -90,11 +90,26 @@ export async function prepareBuild(buildConfig: FiremynaBuildConfig) {
         { ignore: mode === "dev" } // Firestore emulator works without rules
       ),
 
+    // Copy the Functions runtime config
     mode === "dev" &&
       config.functionsRuntimeConfigPath &&
       copyToBuild(config.functionsRuntimeConfigPath, {
         out: ".runtimeconfig.json",
       }),
+
+    // Copy the .env file
+    copyToBuild(".env", { ignore: true }),
+
+    // Copy the .env.local file
+    mode === "dev" && copyToBuild(".env.local", { ignore: true }),
+
+    // Copy the projects' .env file
+    buildConfig.project &&
+      copyToBuild(`.env.${buildConfig.project}`, { ignore: true }),
+
+    // Copy the local projects' .env file
+    buildConfig.project &&
+      copyToBuild(`.env.${buildConfig.project}.local`, { ignore: true }),
   ]);
 
   return { pkg };

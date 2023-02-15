@@ -41,6 +41,7 @@ export default class Dev extends Command {
     );
     const buildConfig = getBuildConfig({
       mode: "dev",
+      project,
       appEnv: "development",
       cwd,
       config: resolvedConfig,
