@@ -60,9 +60,23 @@ export async function prepareBuild(buildConfig: FiremynaBuildConfig) {
   config.preset && presetCommand(config.preset, "prepare-package-json")?.(pkg);
 
   await Promise.all<any>([
+    // Generate package.json
     writeFile(
       resolve(cwd, paths.appEnvBuild, "package.json"),
       JSON.stringify(pkg, null, 2)
+    ),
+
+    // Copy the lock file
+    // TODO: Add support for Yarn and pnpm
+    copyToBuild("package-lock.json", { ignore: true }),
+
+    // Copy the Firebase projects config
+    copyToBuild(".firebaserc"),
+
+    // Generate firebase.json
+    writeFile(
+      resolve(cwd, paths.appEnvBuild, "firebase.json"),
+      JSON.stringify(firebaseJSON(buildConfig), null, 2)
     ),
 
     // Copy the Storage security rules
@@ -75,17 +89,6 @@ export async function prepareBuild(buildConfig: FiremynaBuildConfig) {
         firestoreRulesPath(config),
         { ignore: mode === "dev" } // Firestore emulator works without rules
       ),
-
-    // TODO: Add support for Yarn and pnpm
-    copyToBuild("package-lock.json", { ignore: true }),
-
-    // TODO: Generate from the config
-    copyToBuild(".firebaserc"),
-
-    writeFile(
-      resolve(cwd, paths.appEnvBuild, "firebase.json"),
-      JSON.stringify(firebaseJSON(buildConfig), null, 2)
-    ),
 
     mode === "dev" &&
       config.functionsRuntimeConfigPath &&
