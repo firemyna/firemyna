@@ -171,5 +171,7 @@ export default class Build extends Command {
     await new Promise((resolve) =>
       p ? p.on("close", resolve) : resolve(void 0)
     );
+
+    return buildConfig;
   }
 }
