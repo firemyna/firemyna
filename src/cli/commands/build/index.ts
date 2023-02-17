@@ -121,17 +121,26 @@ export default class Build extends Command {
 
     CliUx.ux.action.stop();
 
-    CliUx.ux.action.start("Cleaning npm dependencies");
+    if (config.optimizePackages) {
+      // TODO: Add support for:
+      // - yarn, pnpm
+      // - npm without package-lock.json
+      // - workspaces?
+      CliUx.ux.action.start("Optimizing npm dependencies");
 
-    const buildDeps = await parseBuildDependencies(buildConfig);
-    const pkgDeps = listPkgDependencies(pkg);
-    const unusedDeps = remove(difference(pkgDeps, buildDeps), "firebase-admin");
+      const buildDeps = await parseBuildDependencies(buildConfig);
+      const pkgDeps = listPkgDependencies(pkg);
+      const unusedDeps = remove(
+        difference(pkgDeps, buildDeps),
+        "firebase-admin"
+      );
 
-    await exec(`npm uninstall --package-lock-only ${unusedDeps.join(" ")}`, {
-      cwd: resolve(buildConfig.cwd, buildConfig.paths.appEnvBuild),
-    });
+      await exec(`npm uninstall --package-lock-only ${unusedDeps.join(" ")}`, {
+        cwd: resolve(buildConfig.cwd, buildConfig.paths.appEnvBuild),
+      });
 
-    CliUx.ux.action.stop();
+      CliUx.ux.action.stop();
+    }
 
     let p: cp.ChildProcess | undefined;
 

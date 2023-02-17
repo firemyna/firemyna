@@ -60,6 +60,9 @@ export interface FiremynaConfigResolved {
   storage?: boolean | FiremynaConfigStorage;
   /** The Firestore config. */
   firestore?: boolean | FiremynaConfigFirestore;
+  /** The option enables npm packages optimization (defaults to false).
+   * It scans the build code and removes unused dependencies. */
+  optimizePackages?: boolean;
 }
 
 /**
