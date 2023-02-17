@@ -65,4 +65,10 @@ export const corsFlag = Flags.boolean({
 
 export const projectFlag = Flags.string({
   description: "The Firebase project alias or ID",
+  env: "FIREBASE_PROJECT",
+});
+
+export const tokenFlag = Flags.string({
+  description: "The Firebase token to use",
+  env: "FIREBASE_TOKEN",
 });

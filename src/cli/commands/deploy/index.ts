@@ -1,24 +1,32 @@
 import { CliUx } from "@oclif/core";
 import cp from "child_process";
 import { resolve } from "path";
-import { getBuildConfig } from "../../../build";
-import { loadConfig, resolveConfig } from "../../../config";
-import { presetProjectPaths } from "../../../presets/paths";
 import Build from "../build";
+import { tokenFlag } from "../../flags";
 
 export default class Deploy extends Build {
   static description = "Deploy the Firemyna project";
 
+  static flags = {
+    ...Build.flags,
+    token: tokenFlag,
+  };
+
   async run() {
     const buildConfig = await Build.prototype.run.call(this);
+
+    const { flags } = await this.parse(Deploy);
+    const token = flags.token;
 
     CliUx.ux.log("Deploying the app...");
 
     const p = cp.spawn(
       "npx",
-      ["firebase", "deploy"].concat(
-        buildConfig.project ? ["--project", buildConfig.project] : []
-      ),
+      ["firebase", "deploy"]
+        // Assign Firebase project
+        .concat(buildConfig.project ? ["--project", buildConfig.project] : [])
+        // Assign Firebase token for CI
+        .concat(token ? ["--token", token] : []),
       {
         cwd: resolve(buildConfig.cwd, buildConfig.paths.appEnvBuild),
         shell: true,
