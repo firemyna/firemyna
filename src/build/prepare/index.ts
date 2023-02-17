@@ -71,7 +71,10 @@ export async function prepareBuild(buildConfig: FiremynaBuildConfig) {
     copyToBuild("package-lock.json", { ignore: true }),
 
     // Copy the Firebase projects config
-    copyToBuild(".firebaserc"),
+    mode === "dev"
+      ? // In dev mode, try .firebaserc.local first
+        copyToBuild(".firebaserc.local").catch(() => copyToBuild(".firebaserc"))
+      : copyToBuild(".firebaserc"),
 
     // Generate firebase.json
     writeFile(
