@@ -1,7 +1,7 @@
 import { Command } from "@oclif/core";
 import cp from "child_process";
 import { BuildIncremental } from "esbuild";
-import { join, parse as parsePath, relative, resolve } from "path";
+import { basename, join, parse as parsePath, relative, resolve } from "path";
 import { FiremynaBuildConfig, getBuildConfig } from "../../../build";
 import { prepareBuild } from "../../../build/prepare";
 import { loadConfig, resolveConfig } from "../../../config";
@@ -63,7 +63,7 @@ export default class Dev extends Command {
     async function buildIndex() {
       const indexContents = stringifyFunctionsIndex(functions, buildConfig);
       const build = await buildFile({
-        sourceFile: "index.js",
+        file: "index.js",
         input: {
           type: "contents",
           contents: indexContents,
@@ -258,10 +258,11 @@ async function incrementalBuild(
 ) {
   const file = `${fn.name}.js`;
   return buildFile({
-    sourceFile: file,
+    file,
     input: {
       type: "entry",
       path: resolve(buildConfig.cwd, fn.path),
+      sourceFile: basename(fn.path),
     },
     resolvePath: resolve(buildConfig.cwd, parsePath(fn.path).dir),
     bundle: true,

@@ -38,10 +38,11 @@ export async function buildFunctions(
           relative(buildConfig.cwd, resolve(buildConfig.cwd, fn.path))
         ).dir;
         build[file] = await buildFile({
-          sourceFile: basename(fn.path),
+          file,
           input: {
             type: "contents",
             contents: await readFile(resolve(buildConfig.cwd, fn.path), "utf8"),
+            sourceFile: basename(fn.path),
           },
           resolvePath,
           bundle: true,
@@ -50,7 +51,7 @@ export async function buildFunctions(
       })
       .concat([
         buildFile({
-          sourceFile: "index.js",
+          file: "index.js",
           input: {
             type: "contents",
             contents: indexContents,
@@ -65,7 +66,7 @@ export async function buildFunctions(
           readFile(buildConfig.config.functionsInitPath, "utf8").then(
             (contents) =>
               buildFile({
-                sourceFile: "init.js",
+                file: "init.js",
                 input: {
                   type: "contents",
                   contents,
@@ -281,7 +282,7 @@ async function findFunctionPath(
 }
 
 export interface BuildFileProps<Incremental extends boolean | undefined> {
-  sourceFile: string;
+  file: string;
   input: BuildFileInput;
   resolvePath: string;
   bundle?: boolean;
@@ -294,11 +295,13 @@ export type BuildFileInput = BuildFileInputEntry | BuildFileInputContents;
 export interface BuildFileInputEntry {
   type: "entry";
   path: string;
+  sourceFile?: string;
 }
 
 export interface BuildFileInputContents {
   type: "contents";
   contents: string;
+  sourceFile?: string;
 }
 
 export function buildFile<Incremental extends boolean | undefined>(
@@ -308,7 +311,7 @@ export function buildFile<Incremental extends boolean | undefined>(
   : Promise<BuildResult & { outputFiles: OutputFile[] }>;
 
 export function buildFile<Incremental extends boolean | undefined>({
-  sourceFile,
+  file,
   input,
   resolvePath,
   bundle,
@@ -321,14 +324,14 @@ export function buildFile<Incremental extends boolean | undefined>({
     target: `node${buildConfig.config.node}`,
     sourcemap: "external",
     format: "cjs",
-    outfile: getBuildFunctionsFilePath(buildConfig, sourceFile),
+    outfile: getBuildFunctionsFilePath(buildConfig, file),
     entryPoints: input.type === "entry" ? [input.path] : undefined,
     stdin:
       input.type === "contents"
         ? {
-            loader: sourceFileLoader(sourceFile),
+            loader: sourceFileLoader(input.sourceFile || file),
             contents: input.contents,
-            sourcefile: sourceFile,
+            sourcefile: input.sourceFile || file,
             resolveDir: resolvePath,
           }
         : undefined,
