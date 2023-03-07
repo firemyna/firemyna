@@ -36,6 +36,8 @@ export default class Deploy extends Build {
       }
     );
 
+    p.on("exit", (exit) => exit && process.exit(exit));
+
     await new Promise((resolve) => p.on("close", resolve));
 
     return buildConfig;
