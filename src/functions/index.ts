@@ -3,7 +3,7 @@ import chokidar from "chokidar";
 import { build, BuildIncremental, BuildResult, OutputFile } from "esbuild";
 import { readdir, readFile, stat } from "fs/promises";
 import { sweep } from "js-fns";
-import { parse as parsePath, relative, resolve } from "path";
+import { parse as parsePath, relative, resolve, basename, extname } from "path";
 import { FiremynaBuildConfig } from "../build";
 
 /**
@@ -38,7 +38,7 @@ export async function buildFunctions(
           relative(buildConfig.cwd, resolve(buildConfig.cwd, fn.path))
         ).dir;
         build[file] = await buildFile({
-          file,
+          sourceFile: basename(fn.path),
           input: {
             type: "contents",
             contents: await readFile(resolve(buildConfig.cwd, fn.path), "utf8"),
@@ -50,7 +50,7 @@ export async function buildFunctions(
       })
       .concat([
         buildFile({
-          file: "index.js",
+          sourceFile: "index.js",
           input: {
             type: "contents",
             contents: indexContents,
@@ -65,7 +65,7 @@ export async function buildFunctions(
           readFile(buildConfig.config.functionsInitPath, "utf8").then(
             (contents) =>
               buildFile({
-                file: "init.js",
+                sourceFile: "init.js",
                 input: {
                   type: "contents",
                   contents,
@@ -281,7 +281,7 @@ async function findFunctionPath(
 }
 
 export interface BuildFileProps<Incremental extends boolean | undefined> {
-  file: string;
+  sourceFile: string;
   input: BuildFileInput;
   resolvePath: string;
   bundle?: boolean;
@@ -308,7 +308,7 @@ export function buildFile<Incremental extends boolean | undefined>(
   : Promise<BuildResult & { outputFiles: OutputFile[] }>;
 
 export function buildFile<Incremental extends boolean | undefined>({
-  file,
+  sourceFile,
   input,
   resolvePath,
   bundle,
@@ -321,13 +321,14 @@ export function buildFile<Incremental extends boolean | undefined>({
     target: `node${buildConfig.config.node}`,
     sourcemap: "external",
     format: "cjs",
-    outfile: getBuildFunctionsFilePath(buildConfig, file),
+    outfile: getBuildFunctionsFilePath(buildConfig, sourceFile),
     entryPoints: input.type === "entry" ? [input.path] : undefined,
     stdin:
       input.type === "contents"
         ? {
+            loader: sourceFileLoader(sourceFile),
             contents: input.contents,
-            sourcefile: file,
+            sourcefile: sourceFile,
             resolveDir: resolvePath,
           }
         : undefined,
@@ -343,9 +344,18 @@ export function buildFile<Incremental extends boolean | undefined>({
     incremental,
   });
 }
+
 export function getBuildFunctionsFilePath(
   buildConfig: FiremynaBuildConfig,
   file: string
 ) {
   return resolve(buildConfig.cwd, buildConfig.paths.functions.build, file);
+}
+
+function sourceFileLoader(sourceFile: string) {
+  const ext = extname(sourceFile);
+  if (ext === ".ts") return "ts";
+  if (ext === ".tsx") return "tsx";
+  if (ext === ".jsx") return "jsx";
+  return "js";
 }

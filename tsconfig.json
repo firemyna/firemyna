@@ -12,7 +12,8 @@
     "outDir": "lib",
     "declaration": true,
     "resolveJsonModule": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "jsx": "preserve"
   },
   "include": ["src/**/*", "*.js"]
 }

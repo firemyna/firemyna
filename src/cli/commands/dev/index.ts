@@ -63,7 +63,7 @@ export default class Dev extends Command {
     async function buildIndex() {
       const indexContents = stringifyFunctionsIndex(functions, buildConfig);
       const build = await buildFile({
-        file: "index.js",
+        sourceFile: "index.js",
         input: {
           type: "contents",
           contents: indexContents,
@@ -258,7 +258,7 @@ async function incrementalBuild(
 ) {
   const file = `${fn.name}.js`;
   return buildFile({
-    file,
+    sourceFile: file,
     input: {
       type: "entry",
       path: resolve(buildConfig.cwd, fn.path),

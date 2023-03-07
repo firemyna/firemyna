@@ -30,6 +30,7 @@ describe("functions", () => {
   };
 
   const buildConfig: FiremynaBuildConfig = {
+    project: "development",
     cwd,
     appEnv: "development",
     mode: "dev",

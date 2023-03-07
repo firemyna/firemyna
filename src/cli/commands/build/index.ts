@@ -63,7 +63,7 @@ export default class Build extends Command {
             env: { ...process.env, NODE_ENV: "production" },
           }).then(async () => {
             const build = await buildFile({
-              file: "renderer.js",
+              sourceFile: "renderer.js",
               input: {
                 type: "contents",
                 contents: remixRenderer(),
@@ -90,7 +90,7 @@ export default class Build extends Command {
             env: { ...process.env, NODE_ENV: "production" },
           }).then(async () => {
             const build = await buildFile({
-              file: "renderer.js",
+              sourceFile: "renderer.js",
               input: {
                 type: "contents",
                 contents: nextRenderer(),
