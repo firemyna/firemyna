@@ -52,12 +52,19 @@ export default class Dev extends Command {
     await prepareBuild(buildConfig);
 
     const builds: Record<string, BuildIncremental> = {};
+    let initBuild: BuildIncremental | undefined = undefined;
     let functions: FiremynaFunction[] = [];
 
     async function startBuilding(fn: FiremynaFunction) {
       const build = await incrementalBuild(buildConfig, fn);
       builds[fn.name] = build;
       await writeEsbuildFile(build);
+    }
+
+    async function startBuildingInit() {
+      if (!buildConfig.config.functionsInitPath) return;
+      initBuild = await incrementalBuildInit(buildConfig);
+      initBuild && (await writeEsbuildFile(initBuild));
     }
 
     async function buildIndex() {
@@ -80,13 +87,13 @@ export default class Dev extends Command {
       children.forEach((child) => child.kill("SIGINT"));
     });
 
-    watchListFunction(buildConfig, async (event) => {
-      switch (event.type) {
+    watchListFunction(buildConfig, async (message) => {
+      switch (message.type) {
         case "initial": {
-          functions = event.functions;
+          functions = message.functions;
 
           await Promise.all([
-            Promise.all(event.functions.map(startBuilding)),
+            Promise.all(message.functions.map(startBuilding)),
             buildIndex(),
           ]);
 
@@ -121,7 +128,7 @@ export default class Dev extends Command {
 
           children.push(firebaseChild);
 
-          logChild({
+          watchChildLog({
             child: firebaseChild,
             formatter: pc.yellow,
             label: "Firebase",
@@ -130,22 +137,50 @@ export default class Dev extends Command {
           return;
         }
 
-        case "add": {
-          functions.push(event.function);
-          await startBuilding(event.function);
-          return buildIndex();
+        case "init": {
+          switch (message.event) {
+            case "add": {
+              await startBuildingInit();
+              return initBuild && buildIndex();
+            }
+
+            case "change": {
+              const build = await initBuild?.rebuild();
+              return initBuild && writeEsbuildFile(build);
+            }
+
+            case "unlink": {
+              return log({
+                label: "Firebase",
+                formatter: pc.red,
+                message: `The init function was removed. Please restart the server if the configuration has changed.`,
+              });
+            }
+          }
         }
 
-        case "change": {
-          const build = await builds[event.function.name]?.rebuild();
-          return writeEsbuildFile(build);
-        }
+        case "function": {
+          switch (message.event) {
+            case "add": {
+              functions.push(message.function);
+              await startBuilding(message.function);
+              return buildIndex();
+            }
 
-        case "unlink": {
-          functions = functions.filter((fn) => fn.name !== event.function.name);
-          builds[event.function.name]?.rebuild.dispose();
-          delete builds[event.function.name];
-          return buildIndex();
+            case "change": {
+              const build = await builds[message.function.name]?.rebuild();
+              return writeEsbuildFile(build);
+            }
+
+            case "unlink": {
+              functions = functions.filter(
+                (fn) => fn.name !== message.function.name
+              );
+              builds[message.function.name]?.rebuild.dispose();
+              delete builds[message.function.name];
+              return buildIndex();
+            }
+          }
         }
       }
     });
@@ -159,7 +194,7 @@ export default class Dev extends Command {
 
         children.push(astroChild);
 
-        logChild({
+        watchChildLog({
           child: astroChild,
           formatter: pc.green,
           label: "Astro",
@@ -176,7 +211,7 @@ export default class Dev extends Command {
 
         children.push(craChild);
 
-        logChild({
+        watchChildLog({
           child: craChild,
           formatter: pc.green,
           label: "Astro",
@@ -193,7 +228,7 @@ export default class Dev extends Command {
 
         children.push(viteChild);
 
-        logChild({
+        watchChildLog({
           child: viteChild,
           formatter: pc.green,
           label: "Vite",
@@ -211,7 +246,11 @@ export default class Dev extends Command {
 
         children.push(remixChild);
 
-        logChild({ child: remixChild, formatter: pc.green, label: "Remix" });
+        watchChildLog({
+          child: remixChild,
+          formatter: pc.green,
+          label: "Remix",
+        });
 
         break;
       }
@@ -225,7 +264,11 @@ export default class Dev extends Command {
 
         children.push(nextChild);
 
-        logChild({ child: nextChild, formatter: pc.green, label: "Next.js" });
+        watchChildLog({
+          child: nextChild,
+          formatter: pc.green,
+          label: "Next.js",
+        });
 
         break;
       }
@@ -239,17 +282,29 @@ interface LogChildProps {
   formatter: Formatter;
 }
 
-function logChild({ label, child, formatter }: LogChildProps) {
-  const paddedLabel = label.padStart(8, " ");
-  const formattedLabel = paddedLabel + " | ";
-
+function watchChildLog({ label, child, formatter }: LogChildProps) {
   child.stdout.on("data", (data) => {
-    console.log(pc.dim(formatter(formattedLabel)) + data.toString().trim());
+    log({ label, formatter, message: data.toString().trim() });
   });
 
   child.stderr.on("data", (data) => {
-    console.log(pc.red(formattedLabel) + data.toString().trim());
+    log({ label, formatter, message: data.toString().trim(), error: true });
   });
+}
+
+interface LogProps {
+  label: string;
+  formatter: Formatter;
+  message: string;
+  error?: boolean;
+}
+
+function log({ label, formatter, message, error }: LogProps) {
+  const paddedLabel = label.padStart(8, " ");
+  const formattedLabel = paddedLabel + " | ";
+
+  if (error) console.log(pc.red(formattedLabel) + message);
+  else console.log(pc.dim(formatter(formattedLabel)) + message);
 }
 
 async function incrementalBuild(
@@ -265,6 +320,23 @@ async function incrementalBuild(
       sourceFile: basename(fn.path),
     },
     resolvePath: resolve(buildConfig.cwd, parsePath(fn.path).dir),
+    bundle: true,
+    buildConfig,
+    incremental: true,
+  });
+}
+
+async function incrementalBuildInit(buildConfig: FiremynaBuildConfig) {
+  const initPath = buildConfig.config.functionsInitPath;
+  if (!initPath) return;
+  return buildFile({
+    file: "init.js",
+    input: {
+      type: "entry",
+      path: resolve(buildConfig.cwd, initPath),
+      sourceFile: basename(initPath),
+    },
+    resolvePath: resolve(buildConfig.cwd, parsePath(initPath).dir),
     bundle: true,
     buildConfig,
     incremental: true,

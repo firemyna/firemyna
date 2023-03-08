@@ -159,32 +159,27 @@ export async function listFunctions(
   );
 }
 
-export type FiremynaWatchCallback = (event: FiremynaWatchEvent) => void;
+export type FiremynaWatchCallback = (message: FiremynaWatchMessage) => void;
 
-export type FiremynaWatchEvent =
-  | FiremynaWatchEventInitial
-  | FiremynaWatchEventAdd
-  | FiremynaWatchEventUnlink
-  | FiremynaWatchEventChange;
+export type FiremynaWatchMessage =
+  | FiremynaWatchMessageInitial
+  | FiremynaWatchMessageFunction
+  | FiremynaWatchMessageInit;
 
-export interface FiremynaWatchEventInitial {
+export interface FiremynaWatchMessageInitial {
   type: "initial";
   functions: FiremynaFunction[];
 }
 
-export interface FiremynaWatchEventAdd {
-  type: "add";
+export interface FiremynaWatchMessageFunction {
+  type: "function";
+  event: "add" | "unlink" | "change";
   function: FiremynaFunction;
 }
 
-export interface FiremynaWatchEventUnlink {
-  type: "unlink";
-  function: FiremynaFunction;
-}
-
-export interface FiremynaWatchEventChange {
-  type: "change";
-  function: FiremynaFunction;
+export interface FiremynaWatchMessageInit {
+  type: "init";
+  event: "add" | "unlink" | "change";
 }
 
 export async function watchListFunction(
@@ -194,22 +189,29 @@ export async function watchListFunction(
   const functions = await listFunctions(buildConfig);
   callback({ type: "initial", functions });
 
-  const watcher = chokidar.watch(buildConfig.paths.functions.src, {
-    persistent: true,
-    depth: 1,
-    ignoreInitial: true,
-  });
+  const watcher = chokidar.watch(
+    [buildConfig.paths.functions.src].concat(
+      buildConfig.config.functionsInitPath || []
+    ),
+    {
+      persistent: true,
+      depth: 1,
+      ignoreInitial: true,
+    }
+  );
 
   watcher.on("all", (event, path) => {
     switch (event) {
       case "add":
       case "change":
-      case "unlink": {
-        const fn = parseFunction(buildConfig, path);
-        if (!fn || !includedFunction(buildConfig, fn)) return;
-
-        callback({ type: event, function: fn });
-      }
+      case "unlink":
+        if (isInitPath(buildConfig.config.functionsInitPath, path)) {
+          callback({ type: "init", event });
+        } else {
+          const fn = parseFunction(buildConfig, path);
+          if (!fn || !includedFunction(buildConfig, fn)) return;
+          callback({ type: "function", event, function: fn });
+        }
     }
   });
 }
@@ -260,11 +262,20 @@ export function includedFunction(
   fn: FiremynaFunction
 ): boolean {
   return (
-    (!functionsInitPath ||
-      normalize(fn.path) !== normalize(functionsInitPath)) &&
+    !isInitPath(functionsInitPath, fn.path) &&
     !functionsIgnorePaths?.find((regex) => regex.test(fn.path)) &&
     (!onlyFunctions || onlyFunctions.includes(fn.name))
   );
+}
+
+/**
+ * Checks if the passed path is the init path.
+ * @param functionsInitPath - the path to the init file
+ * @param path - the path to test
+ * @returns true if the path is the init path
+ */
+function isInitPath(functionsInitPath: string | undefined, path: string) {
+  return functionsInitPath && normalize(path) !== normalize(functionsInitPath);
 }
 
 /**
