@@ -275,7 +275,7 @@ export function includedFunction(
  * @returns true if the path is the init path
  */
 function isInitPath(functionsInitPath: string | undefined, path: string) {
-  return functionsInitPath && normalize(path) !== normalize(functionsInitPath);
+  return functionsInitPath && normalize(path) === normalize(functionsInitPath);
 }
 
 /**
