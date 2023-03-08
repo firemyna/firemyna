@@ -93,6 +93,7 @@ export default class Dev extends Command {
           functions = message.functions;
 
           await Promise.all([
+            startBuildingInit(),
             Promise.all(message.functions.map(startBuilding)),
             buildIndex(),
           ]);
@@ -150,11 +151,13 @@ export default class Dev extends Command {
             }
 
             case "unlink": {
-              return log({
+              log({
                 label: "Firebase",
                 formatter: pc.red,
                 message: `The init function was removed. Please restart the server if the configuration has changed.`,
               });
+              initBuild = undefined;
+              return;
             }
           }
         }
