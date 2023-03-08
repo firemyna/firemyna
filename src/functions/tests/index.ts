@@ -61,6 +61,21 @@ describe("functions", () => {
     },
   };
 
+  const buildConfigWithInit: FiremynaBuildConfig = {
+    ...buildConfig,
+    paths: {
+      ...paths,
+      functions: {
+        src: "init",
+        build: "build/functions",
+      },
+    },
+    config: {
+      ...config,
+      functionsInitPath: "init/init.ts",
+    },
+  };
+
   describe("buildFunctions", () => {
     it("builds function", async () => {
       const result = await buildFunctions(buildConfig);
@@ -258,6 +273,53 @@ export { default as b } from "./b.js";`
         {
           name: "c",
           path: "basic/c.ts",
+        },
+      ]);
+    });
+
+    it("ignores init files", async () => {
+      const list = await listFunctions(buildConfigWithInit);
+      expect(list).toEqual([
+        {
+          name: "a",
+          path: "init/a.js",
+        },
+        {
+          name: "b",
+          path: "init/b.jsx",
+        },
+        {
+          name: "c",
+          path: "init/c.ts",
+        },
+        {
+          name: "d",
+          path: "init/d.tsx",
+        },
+      ]);
+    });
+
+    it("normalizes the init path", async () => {
+      const list = await listFunctions({
+        ...buildConfigWithInit,
+        config: { ...config, functionsInitPath: "./init/init.ts" },
+      });
+      expect(list).toEqual([
+        {
+          name: "a",
+          path: "init/a.js",
+        },
+        {
+          name: "b",
+          path: "init/b.jsx",
+        },
+        {
+          name: "c",
+          path: "init/c.ts",
+        },
+        {
+          name: "d",
+          path: "init/d.tsx",
         },
       ]);
     });

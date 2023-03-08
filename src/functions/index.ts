@@ -3,7 +3,14 @@ import chokidar from "chokidar";
 import { build, BuildIncremental, BuildResult, OutputFile } from "esbuild";
 import { readdir, readFile, stat } from "fs/promises";
 import { sweep } from "js-fns";
-import { parse as parsePath, relative, resolve, basename, extname } from "path";
+import {
+  parse as parsePath,
+  relative,
+  resolve,
+  basename,
+  extname,
+  normalize,
+} from "path";
 import { FiremynaBuildConfig } from "../build";
 
 /**
@@ -247,10 +254,14 @@ export function parseFunction(
  * @returns true if the function is included in build
  */
 export function includedFunction(
-  { config: { functionsIgnorePaths, onlyFunctions } }: FiremynaBuildConfig,
+  {
+    config: { functionsIgnorePaths, onlyFunctions, functionsInitPath },
+  }: FiremynaBuildConfig,
   fn: FiremynaFunction
 ): boolean {
   return (
+    (!functionsInitPath ||
+      normalize(fn.path) !== normalize(functionsInitPath)) &&
     !functionsIgnorePaths?.find((regex) => regex.test(fn.path)) &&
     (!onlyFunctions || onlyFunctions.includes(fn.name))
   );
