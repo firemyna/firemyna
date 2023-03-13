@@ -29,7 +29,7 @@ export default class Deploy extends Build {
         // TODO: Remove with the next Firebase Tools
         .concat(token ? ["--token", token] : [])
         // Force deploy (removal of functions)
-        .concat(buildConfig.config.deploy?.forced ? ["--force"] : []),
+        .concat(buildConfig.config.deploy?.force ? ["--force"] : []),
       {
         cwd: resolve(buildConfig.cwd, buildConfig.paths.appEnvBuild),
         shell: true,

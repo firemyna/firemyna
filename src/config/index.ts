@@ -72,7 +72,7 @@ export interface FiremynaConfigResolved {
 export interface FiremynaConfigDeploy {
   /** Force removal of deleted functions when deploying. Otherwise the build
    * will fail if a function is missing the source code but currently deployed. */
-  forced?: boolean;
+  force?: boolean;
 }
 
 /**
