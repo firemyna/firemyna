@@ -63,6 +63,16 @@ export interface FiremynaConfigResolved {
   /** The option enables npm packages optimization (defaults to false).
    * It scans the build code and removes unused dependencies. */
   optimizePackages?: boolean;
+  deploy?: FiremynaConfigDeploy;
+}
+
+/**
+ * The Firemyna deploy config.
+ */
+export interface FiremynaConfigDeploy {
+  /** Force removal of deleted functions when deploying. Otherwise the build
+   * will fail if a function is missing the source code but currently deployed. */
+  forced?: boolean;
 }
 
 /**

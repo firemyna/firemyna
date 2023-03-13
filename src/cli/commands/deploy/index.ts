@@ -27,7 +27,9 @@ export default class Deploy extends Build {
         .concat(buildConfig.project ? ["--project", buildConfig.project] : [])
         // Assign Firebase token for CI
         // TODO: Remove with the next Firebase Tools
-        .concat(token ? ["--token", token] : []),
+        .concat(token ? ["--token", token] : [])
+        // Force deploy (removal of functions)
+        .concat(buildConfig.config.deploy?.forced ? ["--force"] : []),
       {
         cwd: resolve(buildConfig.cwd, buildConfig.paths.appEnvBuild),
         shell: true,
