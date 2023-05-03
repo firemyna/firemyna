@@ -70,7 +70,7 @@ export default class Dev extends Command {
     async function buildIndex() {
       const indexContents = stringifyFunctionsIndex(functions, buildConfig);
       const build = await buildFile({
-        file: "index.js",
+        file: "index.cjs",
         input: {
           type: "contents",
           contents: indexContents,
@@ -314,7 +314,7 @@ async function incrementalBuild(
   buildConfig: FiremynaBuildConfig,
   fn: FiremynaFunction
 ) {
-  const file = `${fn.name}.js`;
+  const file = `${fn.name}.cjs`;
   return buildFile({
     file,
     input: {
@@ -333,7 +333,7 @@ async function incrementalBuildInit(buildConfig: FiremynaBuildConfig) {
   const initPath = buildConfig.config.functionsInitPath;
   if (!initPath) return;
   return buildFile({
-    file: "init.js",
+    file: "init.cjs",
     input: {
       type: "entry",
       path: resolve(buildConfig.cwd, initPath),

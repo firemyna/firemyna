@@ -53,7 +53,7 @@ export async function prepareBuild(buildConfig: FiremynaBuildConfig) {
 
   Object.assign(pkg, {
     // TODO: Get from paths
-    main: "functions/index.js",
+    main: "functions/index.cjs",
     engines: { node: config.node },
   });
 

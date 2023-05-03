@@ -182,7 +182,7 @@ export async function loadConfig(
     format: "cjs",
     loader: "ts",
   });
-  const tmpPath = resolve(process.cwd(), `firemyna.config.${Date.now()}.js`);
+  const tmpPath = resolve(process.cwd(), `firemyna.config.${Date.now()}.cjs`);
   await writeFile(tmpPath, source.code);
 
   try {

@@ -40,7 +40,7 @@ export async function buildFunctions(
   await Promise.all(
     fns
       .map(async (fn) => {
-        const file = `${fn.name}.js`;
+        const file = `${fn.name}.cjs`;
         const resolvePath = parsePath(
           relative(buildConfig.cwd, resolve(buildConfig.cwd, fn.path))
         ).dir;
@@ -58,7 +58,7 @@ export async function buildFunctions(
       })
       .concat([
         buildFile({
-          file: "index.js",
+          file: "index.cjs",
           input: {
             type: "contents",
             contents: indexContents,
@@ -66,14 +66,14 @@ export async function buildFunctions(
           resolvePath: buildConfig.paths.functions.src,
           buildConfig,
         }).then((result) => {
-          build["index.js"] = result;
+          build["index.cjs"] = result;
         }),
 
         buildConfig.config.functionsInitPath &&
           readFile(buildConfig.config.functionsInitPath, "utf8").then(
             (contents) =>
               buildFile({
-                file: "init.js",
+                file: "init.cjs",
                 input: {
                   type: "contents",
                   contents,
@@ -82,7 +82,7 @@ export async function buildFunctions(
                   .dir,
                 buildConfig: buildConfig,
               }).then((result) => {
-                build["init.js"] = result;
+                build["init.cjs"] = result;
               })
           ),
       ] as Promise<void>[])
@@ -102,10 +102,10 @@ export function stringifyFunctionsIndex(
   list: FiremynaFunction[],
   buildConfig: FiremynaBuildConfig
 ) {
-  return (buildConfig.config.functionsInitPath ? [`import "./init.js";`] : [])
+  return (buildConfig.config.functionsInitPath ? [`import "./init.cjs";`] : [])
     .concat(
       list.map(
-        (fn) => `export { default as ${fn.name} } from "./${fn.name}.js";`
+        (fn) => `export { default as ${fn.name} } from "./${fn.name}.cjs";`
       )
     )
     .concat(
@@ -359,7 +359,7 @@ export function buildFile<Incremental extends boolean | undefined>({
         : undefined,
     plugins: [
       NodeResolve({
-        extensions: [".ts", ".tsx", ".js", ".jsx"],
+        extensions: [".ts", ".tsx", ".js", ".jsx", ".cjs", ".mjs"],
         onResolved: (resolved) =>
           resolved.includes("node_modules") ? { external: true } : resolved,
       }),
