@@ -272,5 +272,6 @@ export function configWithDefaults(
     ...config,
     node: config.node || defaultNode,
     format: config.format || defaultFormat,
+    hosting: config.hosting ?? true,
   };
 }
