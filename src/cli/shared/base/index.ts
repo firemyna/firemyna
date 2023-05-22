@@ -1,7 +1,7 @@
 import {
   FiremynaConfigResolved,
   loadConfig,
-  resolveConfig,
+  configWithDefaults,
 } from "../../../config";
 import { FiremynaPaths, getPaths } from "../../../paths";
 import { presetProjectPaths } from "../../../presets/paths";
@@ -40,7 +40,7 @@ export async function commandEnv(
 
   const config = await loadConfig(cwd, configPath);
   if (!config) throw new Error("Can not find the Firemyna config file");
-  const resolvedConfig = resolveConfig(config);
+  const resolvedConfig = configWithDefaults(config);
 
   const projectPaths = presetProjectPaths(
     resolvedConfig.preset,

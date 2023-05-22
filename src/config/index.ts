@@ -261,11 +261,13 @@ export async function tryReadConfig(
 }
 
 /**
- * Resolves (expands default values) the config.
+ * Expands default values in the config.
  * @param config - the Firemyna config
- * @returns resolved Firemyna config
+ * @returns Firemyna config with default values
  */
-export function resolveConfig(config: FiremynaConfig): FiremynaConfigResolved {
+export function configWithDefaults(
+  config: FiremynaConfig
+): FiremynaConfigResolved {
   return {
     ...config,
     node: config.node || defaultNode,

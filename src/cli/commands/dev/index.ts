@@ -4,7 +4,7 @@ import { BuildIncremental } from "esbuild";
 import { basename, join, parse as parsePath, relative, resolve } from "path";
 import { FiremynaBuildConfig, getBuildConfig } from "../../../build";
 import { prepareBuild } from "../../../build/prepare";
-import { loadConfig, resolveConfig } from "../../../config";
+import { loadConfig, configWithDefaults } from "../../../config";
 import { writeEsbuildFile } from "../../../esbuild";
 import {
   buildFile,
@@ -33,7 +33,7 @@ export default class Dev extends Command {
 
     const config = await loadConfig(cwd, flags.config);
     if (!config) throw new Error("Can not find the Firemyna config file");
-    const resolvedConfig = resolveConfig(config);
+    const resolvedConfig = configWithDefaults(config);
 
     const projectPaths = presetProjectPaths(
       config.preset,

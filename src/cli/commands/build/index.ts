@@ -5,7 +5,7 @@ import { resolve } from "path";
 import { promisify } from "util";
 import { getBuildConfig } from "../../../build";
 import { prepareBuild } from "../../../build/prepare";
-import { loadConfig, resolveConfig } from "../../../config";
+import { loadConfig, configWithDefaults } from "../../../config";
 import { listPkgDependencies, parseBuildDependencies } from "../../../deps";
 import { writeEsbuildFile } from "../../../esbuild";
 import { buildFile, buildFunctions } from "../../../functions";
@@ -31,7 +31,7 @@ export default class Build extends Command {
 
     const config = await loadConfig(cwd, flags.config);
     if (!config) throw new Error("Can not find the Firemyna config file");
-    const resolvedConfig = resolveConfig(config);
+    const resolvedConfig = configWithDefaults(config);
 
     const projectPaths = presetProjectPaths(
       config.preset,
