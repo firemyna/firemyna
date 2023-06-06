@@ -57,6 +57,10 @@ export async function prepareBuild(buildConfig: FiremynaBuildConfig) {
     engines: { node: config.node },
   });
 
+  // Remove scripts, to stop Functions run random commands. At some point they
+  // started to run `npm run build` during deployment which messed it up.
+  delete pkg.scripts;
+
   config.preset && presetCommand(config.preset, "prepare-package-json")?.(pkg);
 
   await Promise.all<any>([
