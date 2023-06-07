@@ -117,6 +117,9 @@ export async function prepareBuild(buildConfig: FiremynaBuildConfig) {
     // Copy the local projects' .env file
     buildConfig.project &&
       copyToBuild(`.env.${buildConfig.project}.local`, { ignore: true }),
+
+    // Copy the .secret.local file
+    mode === "dev" && copyToBuild(".secret.local", { ignore: true }),
   ]);
 
   return { pkg };
