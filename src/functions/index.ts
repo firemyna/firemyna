@@ -310,6 +310,7 @@ export interface BuildFileProps<Incremental extends boolean | undefined> {
   bundle?: boolean;
   buildConfig: FiremynaBuildConfig;
   incremental?: Incremental;
+  metafile?: boolean;
 }
 
 export type BuildFileInput = BuildFileInputEntry | BuildFileInputContents;
@@ -367,6 +368,7 @@ export function buildFile<Incremental extends boolean | undefined>({
     allowOverwrite: true,
     write: false,
     incremental,
+    metafile: true,
   });
 }
 

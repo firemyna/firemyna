@@ -35,7 +35,7 @@ export default class GenerateHTTP extends Command {
       cwd,
       configPath,
       name,
-      source: httpFunctionTemplate({
+      source: await httpFunctionTemplate({
         name,
         format,
         memory: flags.memory,

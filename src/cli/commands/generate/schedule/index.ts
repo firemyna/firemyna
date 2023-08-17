@@ -43,7 +43,7 @@ export default class GenerateSchedule extends Command {
       cwd,
       configPath,
       name,
-      source: scheduleFunctionTemplate({
+      source: await scheduleFunctionTemplate({
         name,
         format,
         memory: flags.memory,

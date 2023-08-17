@@ -35,7 +35,7 @@ export default class GenerateExpress extends Command {
       cwd,
       configPath,
       name,
-      source: expressFunctionTemplate({
+      source: await expressFunctionTemplate({
         name,
         format,
         memory: flags.memory,

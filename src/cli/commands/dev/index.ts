@@ -1,6 +1,6 @@
 import { Command } from "@oclif/core";
 import cp from "child_process";
-import { BuildIncremental } from "esbuild";
+import { BuildIncremental, Metafile, analyzeMetafile } from "esbuild";
 import { basename, join, parse as parsePath, relative, resolve } from "path";
 import { FiremynaBuildConfig, getBuildConfig } from "../../../build";
 import { prepareBuild } from "../../../build/prepare";
@@ -16,6 +16,8 @@ import { presetProjectPaths } from "../../../presets/paths";
 import { configFlag, cwdFlag, projectFlag } from "../../flags";
 import pc from "picocolors";
 import { Formatter } from "picocolors/types";
+import { difference } from "js-fns";
+import { watchDeps } from "../../../watch";
 
 export default class Dev extends Command {
   static description = "Starts the Firemyna development server";
@@ -55,15 +57,31 @@ export default class Dev extends Command {
     let initBuild: BuildIncremental | undefined = undefined;
     let functions: FiremynaFunction[] = [];
 
+    const { onBuild, onStop } = watchDeps(async (file) => {
+      log({
+        label: "Firemyna",
+        formatter: pc.magenta,
+        message: `Rebuilding ${pc.blue(file)}...`,
+      });
+      const build = await builds[file]?.rebuild();
+      build?.metafile && onBuild(file, build.metafile);
+      return writeEsbuildFile(build);
+    });
+
     async function startBuilding(fn: FiremynaFunction) {
       const build = await incrementalBuild(buildConfig, fn);
+      build?.metafile && onBuild(fn.name, build.metafile);
       builds[fn.name] = build;
       await writeEsbuildFile(build);
     }
 
     async function startBuildingInit() {
       if (!buildConfig.config.functionsInitPath) return;
+
       initBuild = await incrementalBuildInit(buildConfig);
+
+      initBuild?.metafile && onBuild("init.cjs", initBuild.metafile);
+
       initBuild && (await writeEsbuildFile(initBuild));
     }
 
@@ -78,6 +96,9 @@ export default class Dev extends Command {
         resolvePath: buildConfig.paths.functions.src,
         buildConfig,
       });
+
+      build?.metafile && onBuild("index.cjs", build.metafile);
+
       return writeEsbuildFile(build);
     }
 
@@ -157,6 +178,7 @@ export default class Dev extends Command {
                 message: `The init function was removed. Please restart the server if the configuration has changed.`,
               });
               initBuild = undefined;
+              onStop("init.cjs");
               return;
             }
           }
@@ -181,7 +203,10 @@ export default class Dev extends Command {
               );
               builds[message.function.name]?.rebuild.dispose();
               delete builds[message.function.name];
-              return buildIndex();
+              buildIndex();
+              // Stop watching the file
+              onStop(message.function.name);
+              break;
             }
           }
         }
@@ -217,7 +242,7 @@ export default class Dev extends Command {
         watchChildLog({
           child: craChild,
           formatter: pc.green,
-          label: "Astro",
+          label: "CRA",
         });
 
         break;
@@ -326,6 +351,7 @@ async function incrementalBuild(
     bundle: true,
     buildConfig,
     incremental: true,
+    metafile: true,
   });
 }
 
@@ -343,5 +369,16 @@ async function incrementalBuildInit(buildConfig: FiremynaBuildConfig) {
     bundle: true,
     buildConfig,
     incremental: true,
+    metafile: true,
   });
+}
+
+interface ExternalWatch {
+  [pkg: string]: {
+    [file: string]: boolean;
+  };
+}
+
+interface ExternalPackages {
+  [file: string]: string[];
 }

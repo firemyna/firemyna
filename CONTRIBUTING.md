@@ -36,3 +36,21 @@ testing commands on a specific directory:
 # Run the init command on examples/vanilla directory:
 ./bin/dev init --cwd ./examples/vanilla
 ```
+
+## Linking
+
+To test source code changes in an app:
+
+```bash
+# Start build in the watch mode:
+make build-watch
+
+# Link the library
+npm link
+
+# Switch to the testing environment:
+cd ../../your-app
+
+# Link the package:
+npm link firemyna
+```

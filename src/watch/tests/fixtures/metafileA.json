@@ -1,0 +1,40 @@
+{
+  "inputs": {
+    "src/init.ts": {
+      "bytes": 65,
+      "imports": [
+        {
+          "path": "firebase-admin",
+          "kind": "import-statement",
+          "external": true
+        }
+      ],
+      "format": "esm"
+    }
+  },
+  "outputs": {
+    "build/development/functions/init.cjs.map": {
+      "imports": [],
+      "exports": [],
+      "inputs": {},
+      "bytes": 234
+    },
+    "build/development/functions/init.cjs": {
+      "imports": [
+        {
+          "path": "firebase-admin",
+          "kind": "require-call",
+          "external": true
+        }
+      ],
+      "exports": [],
+      "entryPoint": "src/init.ts",
+      "inputs": {
+        "src/init.ts": {
+          "bytesInOutput": 71
+        }
+      },
+      "bytes": 1249
+    }
+  }
+}

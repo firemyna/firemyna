@@ -32,7 +32,7 @@ export default class GenerateCallable extends Command {
       cwd,
       configPath,
       name,
-      source: callableFunctionTemplate({
+      source: await callableFunctionTemplate({
         name,
         format,
         memory: flags.memory,

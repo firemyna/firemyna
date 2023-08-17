@@ -49,7 +49,7 @@ export default class GenerateRtdb extends Command {
       cwd,
       configPath,
       name,
-      source: rtdbFunctionTemplate({
+      source: await rtdbFunctionTemplate({
         name,
         format,
         memory: flags.memory,

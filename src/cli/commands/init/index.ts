@@ -60,11 +60,11 @@ export default class Init extends Command {
       // Generate demo function
       writeFile(
         getFunctionSourcePath({ name: "hello", format, paths }),
-        httpFunctionTemplate({ name: "hello", format })
+        await httpFunctionTemplate({ name: "hello", format })
       ),
 
       // Generate the Firemyna config
-      writeFile(resolve(cwd, configPath), firemynaConfigTemplate(config)),
+      writeFile(resolve(cwd, configPath), await firemynaConfigTemplate(config)),
     ]);
 
     CliUx.ux.action.stop();

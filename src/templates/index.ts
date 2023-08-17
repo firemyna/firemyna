@@ -41,7 +41,7 @@ export function httpFunctionTemplate({
   cookie,
   cors,
   ...initData
-}: HTTPFunctionTemplateProps): string {
+}: HTTPFunctionTemplateProps): Promise<string> {
   const middlewares: FunctionMiddleware[] = [];
 
   if (cookie) middlewares.push(cookieMiddleware);
@@ -91,7 +91,7 @@ export function expressFunctionTemplate({
   cookie,
   cors,
   ...initData
-}: ExpressFunctionTemplateProps): string {
+}: ExpressFunctionTemplateProps): Promise<string> {
   const middlewares: FunctionMiddleware[] = [];
 
   if (cookie) middlewares.push(cookieMiddleware);
@@ -135,7 +135,7 @@ export function callableFunctionTemplate({
   name,
   format,
   ...initData
-}: CallableFunctionTemplateProps): string {
+}: CallableFunctionTemplateProps): Promise<string> {
   return formatSource(
     `${importFunctions(format)}
 
@@ -168,7 +168,7 @@ export function scheduleFunctionTemplate({
   schedule,
   tz,
   ...initData
-}: ScheduleFunctionTemplateProps): string {
+}: ScheduleFunctionTemplateProps): Promise<string> {
   const tzCode = tz ? `.timeZone(${JSON.stringify(tz)})` : "";
 
   return formatSource(
@@ -212,7 +212,7 @@ export function rtdbFunctionTemplate({
   path,
   instance,
   ...initData
-}: RTDBFunctionTemplateProps): string {
+}: RTDBFunctionTemplateProps): Promise<string> {
   const instanceCode = instance ? `.instance(${JSON.stringify(instance)})` : "";
 
   return formatSource(
@@ -249,7 +249,7 @@ export function firestoreFunctionTemplate({
   event,
   path,
   ...initData
-}: FirestoreFunctionTemplateProps): string {
+}: FirestoreFunctionTemplateProps): Promise<string> {
   return formatSource(
     `${importFunctions(format)}
 
@@ -299,7 +299,9 @@ var cookieMiddleware: FunctionMiddleware = {
  * @param config - the Firemyna config
  * @returns Firemyna config source code
  */
-export function firemynaConfigTemplate(config: FiremynaConfigResolved): string {
+export function firemynaConfigTemplate(
+  config: FiremynaConfigResolved
+): Promise<string> {
   const prefix =
     config.format === "ts"
       ? `import type { FiremynaConfig } from "firemyna";

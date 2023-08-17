@@ -1,4 +1,5 @@
 import { listPkgDependencies, parseSourceDependencies } from ".";
+import { describe, it, expect } from "vitest";
 
 describe("deps", () => {
   describe("parseDependencies", () => {

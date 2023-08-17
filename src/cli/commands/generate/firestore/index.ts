@@ -46,7 +46,7 @@ export default class GenerateFirestore extends Command {
       cwd,
       configPath,
       name,
-      source: firestoreFunctionTemplate({
+      source: await firestoreFunctionTemplate({
         name,
         format,
         memory: flags.memory,

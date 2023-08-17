@@ -1,0 +1,398 @@
+{
+  "inputs": {
+    "../../../charge/charge-paddle/lib/paddle/parse/index.js": {
+      "bytes": 876,
+      "imports": [
+        { "path": "date-fns", "kind": "require-call", "external": true }
+      ],
+      "format": "cjs"
+    },
+    "../../../charge/charge-paddle/lib/plans/index.js": {
+      "bytes": 139,
+      "imports": [],
+      "format": "cjs"
+    },
+    "../../../charge/charge-paddle/lib/transitions/activateSubscription/index.js": {
+      "bytes": 1454,
+      "imports": [
+        {
+          "path": "../../../charge/charge-paddle/lib/paddle/parse/index.js",
+          "kind": "require-call",
+          "original": "../../paddle/parse/index.js"
+        },
+        {
+          "path": "../../../charge/charge-paddle/lib/plans/index.js",
+          "kind": "require-call",
+          "original": "../../plans/index.js"
+        }
+      ],
+      "format": "cjs"
+    },
+    "../../../charge/charge-paddle/lib/transitions/activateTrial/index.js": {
+      "bytes": 1180,
+      "imports": [],
+      "format": "cjs"
+    },
+    "../../../charge/charge-paddle/lib/transitions/expireTrial/index.js": {
+      "bytes": 1383,
+      "imports": [],
+      "format": "cjs"
+    },
+    "../../../charge/charge-paddle/lib/transitions/index.js": {
+      "bytes": 1563,
+      "imports": [
+        {
+          "path": "../../../charge/charge-paddle/lib/transitions/activateSubscription/index.js",
+          "kind": "require-call",
+          "original": "./activateSubscription/index.js"
+        },
+        {
+          "path": "../../../charge/charge-paddle/lib/transitions/activateTrial/index.js",
+          "kind": "require-call",
+          "original": "./activateTrial/index.js"
+        },
+        {
+          "path": "../../../charge/charge-paddle/lib/transitions/expireTrial/index.js",
+          "kind": "require-call",
+          "original": "./expireTrial/index.js"
+        }
+      ],
+      "format": "cjs"
+    },
+    "../../../charge/charge-paddle/lib/functions/activateTrial/index.js": {
+      "bytes": 2080,
+      "imports": [
+        { "path": "date-fns", "kind": "require-call", "external": true },
+        {
+          "path": "firebase-functions",
+          "kind": "require-call",
+          "external": true
+        },
+        {
+          "path": "../../../charge/charge-paddle/lib/transitions/index.js",
+          "kind": "require-call",
+          "original": "../../transitions/index.js"
+        },
+        {
+          "path": "../../../charge/charge-paddle/lib/transitions/activateTrial/index.js",
+          "kind": "require-call",
+          "original": "../../transitions/activateTrial/index.js"
+        }
+      ],
+      "format": "cjs"
+    },
+    "../../../charge/charge-paddle/lib/functions/changePlan/index.js": {
+      "bytes": 149,
+      "imports": [],
+      "format": "cjs"
+    },
+    "../../../charge/charge-paddle/lib/passthrough/index.js": {
+      "bytes": 1358,
+      "imports": [
+        { "path": "crypto", "kind": "require-call", "external": true }
+      ],
+      "format": "cjs"
+    },
+    "../../../charge/charge-paddle/lib/functions/passthrough/index.js": {
+      "bytes": 1331,
+      "imports": [
+        {
+          "path": "firebase-functions",
+          "kind": "require-call",
+          "external": true
+        },
+        {
+          "path": "../../../charge/charge-paddle/lib/passthrough/index.js",
+          "kind": "require-call",
+          "original": "../../passthrough/index.js"
+        }
+      ],
+      "format": "cjs"
+    },
+    "../../../charge/charge-paddle/lib/paddle/api/index.js": {
+      "bytes": 774,
+      "imports": [],
+      "format": "cjs"
+    },
+    "../../../charge/charge-paddle/lib/functions/prices/index.js": {
+      "bytes": 753,
+      "imports": [
+        {
+          "path": "../../../charge/charge-paddle/lib/paddle/api/index.js",
+          "kind": "require-call",
+          "original": "../../paddle/api/index.js"
+        },
+        { "path": "request-ip", "kind": "require-call", "external": true }
+      ],
+      "format": "cjs"
+    },
+    "../../../charge/charge-paddle/lib/paddle/process/subscriptionCreated/index.js": {
+      "bytes": 637,
+      "imports": [
+        {
+          "path": "../../../charge/charge-paddle/lib/transitions/index.js",
+          "kind": "require-call",
+          "original": "../../../transitions/index.js"
+        }
+      ],
+      "format": "cjs"
+    },
+    "../../../charge/charge-paddle/lib/paddle/process/index.js": {
+      "bytes": 983,
+      "imports": [
+        {
+          "path": "../../../charge/charge-paddle/lib/paddle/process/subscriptionCreated/index.js",
+          "kind": "require-call",
+          "original": "./subscriptionCreated/index.js"
+        }
+      ],
+      "format": "cjs"
+    },
+    "../../../charge/charge-paddle/lib/paddle/validate/index.js": {
+      "bytes": 1668,
+      "imports": [
+        { "path": "crypto", "kind": "require-call", "external": true },
+        { "path": "js-fns", "kind": "require-call", "external": true },
+        { "path": "php-serialize", "kind": "require-call", "external": true }
+      ],
+      "format": "cjs"
+    },
+    "../../../charge/charge-paddle/lib/functions/updateBilling/index.js": {
+      "bytes": 552,
+      "imports": [
+        {
+          "path": "../../../charge/charge-paddle/lib/paddle/process/index.js",
+          "kind": "require-call",
+          "original": "../../paddle/process/index.js"
+        },
+        {
+          "path": "../../../charge/charge-paddle/lib/paddle/validate/index.js",
+          "kind": "require-call",
+          "original": "../../paddle/validate/index.js"
+        }
+      ],
+      "format": "cjs"
+    },
+    "../../../charge/charge-paddle/lib/functions/updateTrial/index.js": {
+      "bytes": 931,
+      "imports": [],
+      "format": "cjs"
+    },
+    "../../../charge/charge-paddle/lib/adapter/server/index.js": {
+      "bytes": 2186,
+      "imports": [
+        {
+          "path": "firebase-functions",
+          "kind": "require-call",
+          "external": true
+        },
+        {
+          "path": "../../../charge/charge-paddle/lib/functions/activateTrial/index.js",
+          "kind": "require-call",
+          "original": "../../functions/activateTrial/index.js"
+        },
+        {
+          "path": "../../../charge/charge-paddle/lib/functions/changePlan/index.js",
+          "kind": "require-call",
+          "original": "../../functions/changePlan/index.js"
+        },
+        {
+          "path": "../../../charge/charge-paddle/lib/functions/passthrough/index.js",
+          "kind": "require-call",
+          "original": "../../functions/passthrough/index.js"
+        },
+        {
+          "path": "../../../charge/charge-paddle/lib/functions/prices/index.js",
+          "kind": "require-call",
+          "original": "../../functions/prices/index.js"
+        },
+        {
+          "path": "../../../charge/charge-paddle/lib/functions/updateBilling/index.js",
+          "kind": "require-call",
+          "original": "../../functions/updateBilling/index.js"
+        },
+        {
+          "path": "../../../charge/charge-paddle/lib/functions/updateTrial/index.js",
+          "kind": "require-call",
+          "original": "../../functions/updateTrial/index.js"
+        }
+      ],
+      "format": "cjs"
+    },
+    "../../packages/billing/index.ts": {
+      "bytes": 954,
+      "imports": [
+        {
+          "path": "../../../charge/charge-paddle/lib/adapter/server/index.js",
+          "kind": "import-statement",
+          "original": "@chargekit/paddle"
+        }
+      ],
+      "format": "esm"
+    },
+    "../../packages/db/index.ts": {
+      "bytes": 2747,
+      "imports": [
+        { "path": "typesaurus", "kind": "import-statement", "external": true },
+        {
+          "path": "../../packages/billing/index.ts",
+          "kind": "import-statement",
+          "original": "@dc/billing"
+        }
+      ],
+      "format": "esm"
+    },
+    "../../packages/authorize/index.ts": {
+      "bytes": 934,
+      "imports": [
+        {
+          "path": "../../packages/db/index.ts",
+          "kind": "import-statement",
+          "original": "db"
+        },
+        {
+          "path": "firebase-functions",
+          "kind": "import-statement",
+          "external": true
+        }
+      ],
+      "format": "esm"
+    },
+    "../../packages/billing-functions/index.ts": {
+      "bytes": 1555,
+      "imports": [
+        {
+          "path": "../../packages/db/index.ts",
+          "kind": "import-statement",
+          "original": "db"
+        },
+        {
+          "path": "../../packages/billing/index.ts",
+          "kind": "import-statement",
+          "original": "@dc/billing"
+        },
+        {
+          "path": "../../packages/authorize/index.ts",
+          "kind": "import-statement",
+          "original": "@dc/authorize"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/prices/index.ts": {
+      "bytes": 96,
+      "imports": [
+        {
+          "path": "../../packages/billing-functions/index.ts",
+          "kind": "import-statement",
+          "original": "@dc/billing-functions"
+        }
+      ],
+      "format": "esm"
+    }
+  },
+  "outputs": {
+    "build/development/functions/prices.cjs.map": {
+      "imports": [],
+      "exports": [],
+      "inputs": {},
+      "bytes": 41667
+    },
+    "build/development/functions/prices.cjs": {
+      "imports": [
+        { "path": "date-fns", "kind": "require-call", "external": true },
+        { "path": "date-fns", "kind": "require-call", "external": true },
+        {
+          "path": "firebase-functions",
+          "kind": "require-call",
+          "external": true
+        },
+        { "path": "crypto", "kind": "require-call", "external": true },
+        {
+          "path": "firebase-functions",
+          "kind": "require-call",
+          "external": true
+        },
+        { "path": "request-ip", "kind": "require-call", "external": true },
+        { "path": "crypto", "kind": "require-call", "external": true },
+        { "path": "js-fns", "kind": "require-call", "external": true },
+        { "path": "php-serialize", "kind": "require-call", "external": true },
+        {
+          "path": "firebase-functions",
+          "kind": "require-call",
+          "external": true
+        },
+        { "path": "typesaurus", "kind": "require-call", "external": true },
+        {
+          "path": "firebase-functions",
+          "kind": "require-call",
+          "external": true
+        }
+      ],
+      "exports": [],
+      "entryPoint": "src/prices/index.ts",
+      "inputs": {
+        "../../../charge/charge-paddle/lib/paddle/parse/index.js": {
+          "bytesInOutput": 621
+        },
+        "../../../charge/charge-paddle/lib/plans/index.js": {
+          "bytesInOutput": 268
+        },
+        "../../../charge/charge-paddle/lib/transitions/activateSubscription/index.js": {
+          "bytesInOutput": 1432
+        },
+        "../../../charge/charge-paddle/lib/transitions/activateTrial/index.js": {
+          "bytesInOutput": 964
+        },
+        "../../../charge/charge-paddle/lib/transitions/expireTrial/index.js": {
+          "bytesInOutput": 1218
+        },
+        "../../../charge/charge-paddle/lib/transitions/index.js": {
+          "bytesInOutput": 1120
+        },
+        "../../../charge/charge-paddle/lib/functions/activateTrial/index.js": {
+          "bytesInOutput": 2213
+        },
+        "../../../charge/charge-paddle/lib/functions/changePlan/index.js": {
+          "bytesInOutput": 302
+        },
+        "../../../charge/charge-paddle/lib/passthrough/index.js": {
+          "bytesInOutput": 1125
+        },
+        "../../../charge/charge-paddle/lib/functions/passthrough/index.js": {
+          "bytesInOutput": 1163
+        },
+        "../../../charge/charge-paddle/lib/paddle/api/index.js": {
+          "bytesInOutput": 858
+        },
+        "../../../charge/charge-paddle/lib/functions/prices/index.js": {
+          "bytesInOutput": 964
+        },
+        "../../../charge/charge-paddle/lib/paddle/process/subscriptionCreated/index.js": {
+          "bytesInOutput": 541
+        },
+        "../../../charge/charge-paddle/lib/paddle/process/index.js": {
+          "bytesInOutput": 467
+        },
+        "../../../charge/charge-paddle/lib/paddle/validate/index.js": {
+          "bytesInOutput": 1319
+        },
+        "../../../charge/charge-paddle/lib/functions/updateBilling/index.js": {
+          "bytesInOutput": 697
+        },
+        "../../../charge/charge-paddle/lib/functions/updateTrial/index.js": {
+          "bytesInOutput": 305
+        },
+        "../../../charge/charge-paddle/lib/adapter/server/index.js": {
+          "bytesInOutput": 2428
+        },
+        "src/prices/index.ts": { "bytesInOutput": 180 },
+        "../../packages/db/index.ts": { "bytesInOutput": 1658 },
+        "../../packages/billing/index.ts": { "bytesInOutput": 806 },
+        "../../packages/authorize/index.ts": { "bytesInOutput": 704 },
+        "../../packages/billing-functions/index.ts": { "bytesInOutput": 915 }
+      },
+      "bytes": 25322
+    }
+  }
+}

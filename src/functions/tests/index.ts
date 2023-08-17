@@ -9,6 +9,7 @@ import {
 import { FiremynaBuildConfig } from "../../build";
 import { FiremynaConfigResolved } from "../../config";
 import { FiremynaPaths } from "../../paths";
+import { describe, it, expect } from "vitest";
 
 describe("functions", () => {
   const buildPath = resolve(__dirname, "fixtures/build");
@@ -81,21 +82,21 @@ describe("functions", () => {
       const result = await buildFunctions(buildConfig);
 
       expect(Object.keys(result).sort()).toEqual([
-        "a.js",
-        "b.js",
-        "c.js",
-        "d.js",
-        "index.js",
+        "a.cjs",
+        "b.cjs",
+        "c.cjs",
+        "d.cjs",
+        "index.cjs",
       ]);
 
       expect(
-        result["a.js"]?.outputFiles?.map((file) => file.path).sort()
+        result["a.cjs"]?.outputFiles?.map((file) => file.path).sort()
       ).toEqual([
-        resolve(buildPath, "functions/a.js"),
-        resolve(buildPath, "functions/a.js.map"),
+        resolve(buildPath, "functions/a.cjs"),
+        resolve(buildPath, "functions/a.cjs.map"),
       ]);
 
-      expect(typeof result["a.js"]?.outputFiles?.[0]?.text).toBe("string");
+      expect(typeof result["a.cjs"]?.outputFiles?.[0]?.text).toBe("string");
     });
   });
 
@@ -121,10 +122,10 @@ describe("functions", () => {
       ];
       const result = stringifyFunctionsIndex(list, mixedBuildConfig);
       expect(result).toBe(
-        `export { default as a } from "./a.js";
-export { default as b } from "./b.js";
-export { default as c } from "./c.js";
-export { default as d } from "./d.js";`
+        `export { default as a } from "./a.cjs";
+export { default as b } from "./b.cjs";
+export { default as c } from "./c.cjs";
+export { default as d } from "./d.cjs";`
       );
     });
 
@@ -147,9 +148,9 @@ export { default as d } from "./d.js";`
         },
       });
       expect(result).toBe(
-        `import "./init.js";
-export { default as a } from "./a.js";
-export { default as b } from "./b.js";`
+        `import "./init.cjs";
+export { default as a } from "./a.cjs";
+export { default as b } from "./b.cjs";`
       );
     });
   });

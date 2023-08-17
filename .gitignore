@@ -3,3 +3,4 @@ node_modules
 .npmrc
 /tmp
 src/tests/fixtures/project/build
+oclif.manifest.json
