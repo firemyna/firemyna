@@ -16,7 +16,7 @@ export function parseBuildDependencies(
   );
 
   return new Promise((resolve, reject) => {
-    glob("**/*.js", { cwd: buildPath, dot: true }, async (error, files) => {
+    glob("**/*.cjs", { cwd: buildPath, dot: true }, async (error, files) => {
       if (error) {
         reject(error);
         return;
